@@ -22,7 +22,7 @@ use Comely\Http\Router;
  * Class AbstractController
  * @package Comely\Http\Router
  */
-abstract class AbstractController
+abstract class AbstractController implements \Serializable
 {
     /** @var Router */
     private $router;
@@ -43,6 +43,31 @@ abstract class AbstractController
         $this->response = new Response();
 
         $this->callback();
+    }
+
+    /**
+     * @return void
+     */
+    public function __clone()
+    {
+        throw new \BadMethodCallException('Controller instances cannot be cloned');
+    }
+
+    /**
+     * @return void
+     */
+    public function serialize()
+    {
+        throw new \BadMethodCallException('Controller instances cannot be serialized');
+    }
+
+    /**
+     * @param string $serialized
+     * @return void
+     */
+    public function unserialize($serialized)
+    {
+        throw new \BadMethodCallException('Controller instances cannot be un-serialized');
     }
 
     /**
