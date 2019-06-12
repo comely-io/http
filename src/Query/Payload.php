@@ -14,6 +14,9 @@ declare(strict_types=1);
 
 namespace Comely\Http\Query;
 
+use Comely\DataTypes\Buffer\AbstractBuffer;
+use Comely\DataTypes\Buffer\Binary;
+
 /**
  * Class Payload
  * @package Comely\Http\Query
@@ -62,9 +65,13 @@ class Payload extends AbstractDataIterator
         if (is_scalar($value) || is_null($value)) {
             $prop = new Prop($key, $value); // Scalar or NULL type
         } elseif (is_array($value) || is_object($value)) {
-            $filtered = json_decode(json_encode($value), true);
-            if (!$filtered) {
-                throw new \UnexpectedValueException('Could not set object/array Http Payload value');
+            if ($value instanceof AbstractBuffer) {
+                $filtered = $value instanceof Binary ? $value->base16()->hexits(true) : $value->value();
+            } else {
+                $filtered = json_decode(json_encode($value), true);
+                if (!$filtered) {
+                    throw new \UnexpectedValueException('Could not set object/array Http Payload value');
+                }
             }
 
             $prop = new Prop($key, $filtered); // Safe array
