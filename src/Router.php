@@ -17,6 +17,7 @@ namespace Comely\Http;
 use Comely\DataTypes\OOP;
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Router\AbstractController;
+use Comely\Http\Router\ResponseHandler;
 use Comely\Http\Router\Route;
 
 /**
@@ -31,14 +32,18 @@ class Router
     private $count;
     /** @var null|string */
     private $fallbackController;
+    /** @var ResponseHandler */
+    private $respHandler;
 
     /**
      * Router constructor.
+     * @throws RouterException
      */
     public function __construct()
     {
         $this->routes = [];
         $this->count = 0;
+        $this->respHandler = new ResponseHandler($this);
     }
 
     /**
@@ -47,6 +52,14 @@ class Router
     public function count(): int
     {
         return $this->count;
+    }
+
+    /**
+     * @return ResponseHandler
+     */
+    public function response(): ResponseHandler
+    {
+        return $this->respHandler;
     }
 
     /**
