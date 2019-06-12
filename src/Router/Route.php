@@ -153,9 +153,10 @@ class Route
 
     /**
      * @param Request $req
+     * @param bool $bypassHttpAuth
      * @return string|null
      */
-    public function request(Request $req): ?string
+    public function request(Request $req, bool $bypassHttpAuth = false): ?string
     {
         $url = $req->url()->path();
 
@@ -165,7 +166,7 @@ class Route
         }
 
         // Route Authentication
-        if ($this->auth) {
+        if ($this->auth && !$bypassHttpAuth) {
             $this->auth->authenticate(
                 $req->headers()->get("authorization") // HTTP header "Authorization"
             );

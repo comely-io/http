@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace Comely\Http;
 
 use Comely\Http\Exception\HttpRequestException;
+use Comely\Http\Query\Authentication;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
 use Comely\Http\Query\URL;
@@ -35,6 +36,8 @@ class Request
     protected $headers;
     /** @var Payload */
     protected $body;
+    /** @var null|Authentication */
+    protected $auth;
 
     /**
      * Request constructor.
@@ -47,12 +50,20 @@ class Request
         // HTTP method
         $this->method = strtoupper($method);
         if (!in_array($method, self::METHODS)) {
-            throw new HttpRequestException('Invalid HTTP method');
+            throw new HttpRequestException('Invalid HTTP request method');
         }
 
         $this->url = new URL($url);
         $this->headers = new Headers();
         $this->body = new Payload();
+    }
+
+    /**
+     * @return string
+     */
+    public function method(): string
+    {
+        return $this->method;
     }
 
     /**
@@ -77,5 +88,17 @@ class Request
     public function payload(): Payload
     {
         return $this->body;
+    }
+
+    /**
+     * @return Authentication
+     */
+    public function auth(): Authentication
+    {
+        if (!$this->auth) {
+            $this->auth = new Authentication();
+        }
+
+        return $this->auth;
     }
 }

@@ -80,16 +80,18 @@ class Router
 
     /**
      * @param Request $req
+     * @param bool $bypassHttpAuth
      * @return AbstractController
      * @throws RouterException
      * @throws \ReflectionException
      */
-    public function request(Request $req): AbstractController
+    public function request(Request $req, bool $bypassHttpAuth = false): AbstractController
     {
+        // Find controller
         $controller = null;
         /** @var Route $route */
         foreach ($this->routes as $route) {
-            $controller = $route->request($req);
+            $controller = $route->request($req, $bypassHttpAuth);
             if ($controller) {
                 break;
             }
@@ -97,9 +99,7 @@ class Router
 
         $controller = $controller ?? $this->fallbackController;
         if (!$controller) {
-            throw new RouterException(
-                'Could not route request to any controller; No default/fallback controller is defined'
-            );
+            throw new RouterException('Could not route request to any controller');
         }
 
         $reflect = new \ReflectionClass($controller);
