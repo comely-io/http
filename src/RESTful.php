@@ -105,15 +105,13 @@ class RESTful
                     if ($method !== "POST") {
                         throw RESTfulException::payloadMethodTypeError($method, $contentType);
                     }
-                    
+
                     $body = $_POST; // Simply use $_POST var;
                     break;
             }
 
             if (!is_array($body)) {
-                throw new RESTfulException(
-                    sprintf('Cannot handle request with content type "%s"', $contentType)
-                );
+                throw RESTfulException::payloadStreamError($method, $contentType);
             }
         }
 
