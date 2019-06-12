@@ -53,6 +53,15 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     }
 
     /**
+     * @param string $key
+     * @return bool
+     */
+    public function has(string $key): bool
+    {
+        return array_key_exists(strtolower($key), $this->data);
+    }
+
+    /**
      * @return array
      */
     final public function array(): array
