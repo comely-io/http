@@ -151,6 +151,13 @@ abstract class AbstractController implements \Serializable
                 );
             }
 
+            $reflect = new \ReflectionClass($pathOrController);
+            if (!$reflect->isSubclassOf('Comely\Http\Router\AbstractController')) {
+                throw new RouterException(
+                    'Forwarded to controller class does not extend "Comely\Http\Router\AbstractController"'
+                );
+            }
+
             return $pathOrController($this->router, $this->request);
         }
 
