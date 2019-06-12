@@ -18,6 +18,7 @@ use Comely\Http\Exception\HttpRequestException;
 use Comely\Http\Query\Authentication;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
+use Comely\Http\Query\SSL;
 use Comely\Http\Query\URL;
 
 /**
@@ -38,6 +39,8 @@ class Request
     protected $body;
     /** @var null|Authentication */
     protected $auth;
+    /** @var null|SSL */
+    protected $ssl;
 
     /**
      * Request constructor.
@@ -100,5 +103,41 @@ class Request
         }
 
         return $this->auth;
+    }
+
+    /**
+     * @return SSL
+     * @throws Exception\SSL_Exception
+     */
+    public function ssl(): SSL
+    {
+        if (!$this->ssl) {
+            $this->ssl = new SSL();
+        }
+
+        return $this->ssl;
+    }
+
+    /**
+     * @param mixed ...$props
+     */
+    public function override(...$props): void
+    {
+        foreach ($props as $prop) {
+            if ($prop instanceof Headers) {
+                $this->headers = $prop;
+                return;
+            }
+
+            if ($prop instanceof Payload) {
+                $this->body = $prop;
+                return;
+            }
+
+            if ($prop instanceof URL) {
+                $this->url = $prop;
+                return;
+            }
+        }
     }
 }
