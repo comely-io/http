@@ -16,7 +16,6 @@ namespace Comely\Http\Router;
 
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Query\Payload;
-use Comely\Http\Response;
 use Comely\Http\Router;
 
 /**
@@ -81,13 +80,28 @@ class ResponseHandler
     }
 
     /**
-     * @param Response $res
+     * @param AbstractController $controller
      */
-    public function send(Response $res): void
+    public function send(AbstractController $controller): void
     {
+        $req = $controller->request();
+        $res = $controller->response();
+
         // Set HTTP response Code
         if ($res->code()) {
             http_response_code($res->code());
+        }
+
+        // Is Explicit Content-Type specified?
+        $contentType = $res->headers()->get("content-type");
+        if (!$contentType) {
+            // Not specified, Try Request's ACCEPT header
+            $accept = $req->headers()->get("accept");
+            $acceptTypes = trim(explode(";", $accept)[0]);
+            $contentType = $this->findHandler(explode(",", $acceptTypes));
+            if ($contentType) {
+                $res->headers()->set("Content-Type", $contentType);
+            }
         }
 
         // Headers
@@ -99,12 +113,35 @@ class ResponseHandler
 
         // Body
         $contentHandler = $this->default;
-        $contentType = $res->headers()->get("content-type");
         if ($contentType) {
             $contentType = strtolower(trim(explode(";", $contentType)[0]));
             $contentHandler = $this->handlers[$contentType] ?? $contentHandler;
         }
 
         call_user_func($contentHandler, $res->payload());
+    }
+
+    /**
+     * @param array $types
+     * @return string
+     */
+    private function findHandler(array $types): string
+    {
+        $first = array_shift($types);
+        if (isset($this->handlers[strtolower($first)])) {
+            return $first; // First accept opt has registered handler
+        }
+
+        // Check if any of other opts have a registered handler
+        if ($types) {
+            foreach ($types as $type) {
+                if (isset($this->handlers[strtolower($type)])) {
+                    return $type;
+                }
+            }
+        }
+
+        // No registered handler, just return first opt (for default handler)
+        return $first;
     }
 }

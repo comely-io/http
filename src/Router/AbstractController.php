@@ -104,6 +104,6 @@ abstract class AbstractController implements \Serializable
      */
     public function send(): void
     {
-        $this->router->response()->send($this->response);
+        $this->router->response()->send($this);
     }
 }
