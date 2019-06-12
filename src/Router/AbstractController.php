@@ -16,6 +16,7 @@ namespace Comely\Http\Router;
 
 use Comely\DataTypes\OOP;
 use Comely\Http\Exception\RouterException;
+use Comely\Http\Query\Payload;
 use Comely\Http\Request;
 use Comely\Http\Response;
 use Comely\Http\Router;
@@ -91,6 +92,22 @@ abstract class AbstractController implements \Serializable
     public function response(): Response
     {
         return $this->response;
+    }
+
+    /**
+     * @return Payload
+     */
+    public function input(): Payload
+    {
+        return $this->request->payload();
+    }
+
+    /**
+     * @return Payload
+     */
+    public function output(): Payload
+    {
+        return $this->response->payload();
     }
 
     /**
