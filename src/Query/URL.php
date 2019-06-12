@@ -26,6 +26,10 @@ class URL
     private $url;
     /** @var array */
     private $parsed;
+    /** @var string|null */
+    private $path;
+    /** @var array */
+    private $pathParts;
 
     /**
      * URL constructor.
@@ -41,6 +45,8 @@ class URL
 
         $this->url = $url;
         $this->parsed = $parsed;
+        $this->path = $this->parsed["path"] ?? null;
+        $this->pathParts = explode("/", trim($this->path ?? "", "/"));
     }
 
     /**
@@ -92,11 +98,24 @@ class URL
     }
 
     /**
+     * @param int|null $index
      * @return string|null
      */
-    public function path(): ?string
+    public function path(?int $index = null): ?string
     {
-        return $this->parsed["path"] ?? null;
+        if (is_null($index)) {
+            return $this->path;
+        }
+
+        return $this->pathParts[$index] ?? null;
+    }
+
+    /**
+     * @return string
+     */
+    public function root(): string
+    {
+        return str_repeat("../", count($this->pathParts));
     }
 
     /**
