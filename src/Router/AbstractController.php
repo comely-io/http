@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Comely\Http\Router;
 
+use Comely\DataTypes\OOP;
+use Comely\Http\Exception\RouterException;
 use Comely\Http\Request;
 use Comely\Http\Response;
 use Comely\Http\Router;
@@ -48,6 +50,11 @@ abstract class AbstractController implements \Serializable
     /**
      * @return void
      */
+    abstract public function callback(): void;
+
+    /**
+     * @return void
+     */
     public function __clone()
     {
         throw new \BadMethodCallException('Controller instances cannot be cloned');
@@ -69,11 +76,6 @@ abstract class AbstractController implements \Serializable
     {
         throw new \BadMethodCallException('Controller instances cannot be un-serialized');
     }
-
-    /**
-     * @return void
-     */
-    abstract public function callback(): void;
 
     /**
      * @return Request
@@ -105,5 +107,58 @@ abstract class AbstractController implements \Serializable
     public function send(): void
     {
         $this->router->response()->send($this);
+    }
+
+    /**
+     * @param string $pathOrController
+     * @param string|null $method
+     * @param bool|null $bypassHttpAuth
+     * @return AbstractController
+     * @throws RouterException
+     * @throws \Comely\Http\Exception\HttpRequestException
+     * @throws \ReflectionException
+     */
+    public function forward(string $pathOrController, ?string $method = null, ?bool $bypassHttpAuth = true): AbstractController
+    {
+        // Forward Request directly to a Controller
+        if (OOP::isValidClassName($pathOrController)) {
+            if ($method) {
+                throw new RouterException(
+                    'Second argument not accepted if forwarding directly to a controller class'
+                );
+            }
+
+            if (!class_exists($pathOrController)) {
+                throw new RouterException(
+                    sprintf('Cannot forward request to "%s", class does not exist', $pathOrController)
+                );
+            }
+
+            return $pathOrController($this->router, $this->request);
+        }
+
+        // Create new Request
+        $req = new Request($method ?? $this->request->method(), $pathOrController);
+        $req->override(
+            clone $this->request->headers(),
+            clone $this->request->payload()
+        );
+
+        return $this->router->request($req, $bypassHttpAuth);
+    }
+
+    /**
+     * @param string $url
+     * @param int|null $code
+     */
+    public function redirect(string $url, ?int $code = null): void
+    {
+        $code = $code ?? $this->response->code();
+        if ($code > 0) {
+            http_response_code($code);
+        }
+
+        header(sprintf('Location: %s', $url));
+        exit;
     }
 }

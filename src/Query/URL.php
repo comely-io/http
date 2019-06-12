@@ -111,11 +111,12 @@ class URL
     }
 
     /**
+     * @param string|null $suffix
      * @return string
      */
-    public function root(): string
+    public function root(?string $suffix = null): string
     {
-        return str_repeat("../", count($this->pathParts));
+        return str_repeat("../", count($this->pathParts)) . ltrim($suffix, "/");
     }
 
     /**
