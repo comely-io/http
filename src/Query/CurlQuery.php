@@ -252,8 +252,10 @@ class CurlQuery
         curl_close($ch);
 
         // Update Response object
+        $responseBody = new ResponseBody($body);
+        $responseBody->readOnly(true);
         $response->code($responseCode); // Set Http response code
-        $response->override(new ResponseBody($body)); // Set Response raw body
+        $response->override($responseBody); // Set Response raw body
 
         // Response Body
         $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) ? true : $this->expectJSON;
