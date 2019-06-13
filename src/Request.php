@@ -20,6 +20,7 @@ use Comely\Http\Query\CurlQuery;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
 use Comely\Http\Query\URL;
+use Comely\Http\Router\AbstractController;
 
 /**
  * Class Request
@@ -90,6 +91,22 @@ class Request extends AbstractReqRes
                 return;
             }
         }
+    }
+
+    /**
+     * @param Router $router
+     * @return AbstractController
+     * @throws Exception\RouterException
+     * @throws HttpRequestException
+     * @throws \ReflectionException
+     */
+    public function routeToController(Router $router): AbstractController
+    {
+        if ($this->url->scheme() || $this->url->host()) {
+            throw new HttpRequestException('Request has URL scheme/host set; It cannot be routed internally');
+        }
+
+        return $router->request($this, true);
     }
 
     /**
