@@ -33,6 +33,22 @@ class Http
         self::HTTP_VERSION_2
     ];
 
+    // Status Codes Messages
+    public const MESSAGES = [
+        100 => "Continue",
+        200 => "OK",
+        201 => "Created",
+        202 => "Accepted",
+        204 => "No Content",
+        304 => "Not Modified",
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        409 => "Conflict",
+        500 => "Internal Server Error"
+    ];
+
     /**
      * @param string $url
      * @return Request
