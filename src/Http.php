@@ -1,0 +1,75 @@
+<?php
+/**
+ * This file is a part of "comely-io/http" package.
+ * https://github.com/comely-io/http
+ *
+ * Copyright (c) Furqan A. Siddiqui <hello@furqansiddiqui.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code or visit following link:
+ * https://github.com/comely-io/http/blob/master/LICENSE
+ */
+
+declare(strict_types=1);
+
+namespace Comely\Http;
+
+/**
+ * Class Http
+ * @package Comely\Http
+ */
+class Http
+{
+    public const METHODS = ["GET", "POST", "PUT", "DELETE"];
+
+    // HTTP version
+    public const HTTP_VERSION_1 = CURL_HTTP_VERSION_1_0;
+    public const HTTP_VERSION_1_1 = CURL_HTTP_VERSION_1_1;
+    public const HTTP_VERSION_2 = CURL_HTTP_VERSION_2_0;
+
+    public const HTTP_VERSIONS = [
+        self::HTTP_VERSION_1,
+        self::HTTP_VERSION_1_1,
+        self::HTTP_VERSION_2
+    ];
+
+    /**
+     * @param string $url
+     * @return Request
+     * @throws Exception\HttpRequestException
+     */
+    public static function Get(string $url): Request
+    {
+        return new Request("GET", $url);
+    }
+
+    /**
+     * @param string $url
+     * @return Request
+     * @throws Exception\HttpRequestException
+     */
+    public static function Post(string $url): Request
+    {
+        return new Request("POST", $url);
+    }
+
+    /**
+     * @param string $url
+     * @return Request
+     * @throws Exception\HttpRequestException
+     */
+    public static function Put(string $url): Request
+    {
+        return new Request("PUT", $url);
+    }
+
+    /**
+     * @param string $url
+     * @return Request
+     * @throws Exception\HttpRequestException
+     */
+    public static function Delete(string $url): Request
+    {
+        return new Request("DELETE", $url);
+    }
+}

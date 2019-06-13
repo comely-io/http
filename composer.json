@@ -14,7 +14,8 @@
   ],
   "require": {
     "php": "^7.1",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-curl": "*"
   },
   "require-dev": {
     "comely-io/data-types": "dev-master"
