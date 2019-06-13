@@ -14,30 +14,21 @@ declare(strict_types=1);
 
 namespace Comely\Http;
 
+use Comely\Http\Query\AbstractReqRes;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
+use Comely\Http\Query\ResponseBody;
 
 /**
  * Class Response
  * @package Comely\Http
  */
-class Response
+class Response extends AbstractReqRes
 {
     /** @var null|int */
     private $code;
-    /** @var Headers */
-    private $headers;
-    /** @var Payload */
-    private $payload;
-
-    /**
-     * Response constructor.
-     */
-    public function __construct()
-    {
-        $this->headers = new Headers();
-        $this->payload = new Payload();
-    }
+    /** @var null|ResponseBody */
+    private $body;
 
     /**
      * If argument is passed, Sets new HTTP response code
@@ -55,18 +46,33 @@ class Response
     }
 
     /**
-     * @return Headers
+     * @return ResponseBody|null
      */
-    public function headers(): Headers
+    public function body(): ?ResponseBody
     {
-        return $this->headers;
+        return $this->body;
     }
 
     /**
-     * @return Payload
+     * @param mixed ...$props
      */
-    public function payload(): Payload
+    public function override(...$props): void
     {
-        return $this->payload;
+        foreach ($props as $prop) {
+            if ($prop instanceof Headers) {
+                $this->headers = $prop;
+                return;
+            }
+
+            if ($prop instanceof Payload) {
+                $this->payload = $prop;
+                return;
+            }
+
+            if ($prop instanceof ResponseBody) {
+                $this->body = $prop;
+                return;
+            }
+        }
     }
 }

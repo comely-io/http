@@ -15,32 +15,24 @@ declare(strict_types=1);
 namespace Comely\Http;
 
 use Comely\Http\Exception\HttpRequestException;
-use Comely\Http\Query\Authentication;
+use Comely\Http\Query\AbstractReqRes;
+use Comely\Http\Query\CurlQuery;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
-use Comely\Http\Query\SSL;
 use Comely\Http\Query\URL;
 
 /**
  * Class Request
  * @package Comely\Http
  */
-class Request
+class Request extends AbstractReqRes
 {
-    public const METHODS = ["GET", "POST", "PUT", "DELETE"];
-
+    /** @var null|int */
+    protected $version;
     /** @var string */
     protected $method;
     /** @var string */
     protected $url;
-    /** @var Headers */
-    protected $headers;
-    /** @var Payload */
-    protected $body;
-    /** @var null|Authentication */
-    protected $auth;
-    /** @var null|SSL */
-    protected $ssl;
 
     /**
      * Request constructor.
@@ -50,15 +42,15 @@ class Request
      */
     public function __construct(string $method, string $url)
     {
+        parent::__construct();
+
         // HTTP method
         $this->method = strtoupper($method);
-        if (!in_array($method, self::METHODS)) {
+        if (!in_array($method, Http::METHODS)) {
             throw new HttpRequestException('Invalid HTTP request method');
         }
 
         $this->url = new URL($url);
-        $this->headers = new Headers();
-        $this->body = new Payload();
     }
 
     /**
@@ -78,47 +70,6 @@ class Request
     }
 
     /**
-     * @return Headers
-     */
-    public function headers(): Headers
-    {
-        return $this->headers;
-    }
-
-    /**
-     * @return Payload
-     */
-    public function payload(): Payload
-    {
-        return $this->body;
-    }
-
-    /**
-     * @return Authentication
-     */
-    public function auth(): Authentication
-    {
-        if (!$this->auth) {
-            $this->auth = new Authentication();
-        }
-
-        return $this->auth;
-    }
-
-    /**
-     * @return SSL
-     * @throws Exception\SSL_Exception
-     */
-    public function ssl(): SSL
-    {
-        if (!$this->ssl) {
-            $this->ssl = new SSL();
-        }
-
-        return $this->ssl;
-    }
-
-    /**
      * @param mixed ...$props
      */
     public function override(...$props): void
@@ -130,7 +81,7 @@ class Request
             }
 
             if ($prop instanceof Payload) {
-                $this->body = $prop;
+                $this->payload = $prop;
                 return;
             }
 
@@ -139,5 +90,14 @@ class Request
                 return;
             }
         }
+    }
+
+    /**
+     * @return CurlQuery
+     * @throws HttpRequestException
+     */
+    public function curl(): CurlQuery
+    {
+        return new CurlQuery($this);
     }
 }
