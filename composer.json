@@ -15,10 +15,9 @@
   "require": {
     "php": "^7.1",
     "ext-json": "*",
-    "ext-curl": "*"
-  },
-  "require-dev": {
-    "comely-io/data-types": "dev-master"
+    "ext-curl": "*",
+    "comely-io/data-types": "^1.0.21",
+    "comely-io/utils": "^1.0.10"
   },
   "autoload": {
     "psr-4": {

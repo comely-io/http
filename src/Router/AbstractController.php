@@ -14,12 +14,12 @@ declare(strict_types=1);
 
 namespace Comely\Http\Router;
 
-use Comely\DataTypes\OOP;
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Query\Payload;
 use Comely\Http\Request;
 use Comely\Http\Response;
 use Comely\Http\Router;
+use Comely\Utils\OOP\OOP;
 
 /**
  * Class AbstractController
