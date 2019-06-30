@@ -12,7 +12,7 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http;
+namespace Comely\Http\Response;
 
 use Comely\Http\Query\AbstractReqRes;
 use Comely\Http\Query\Headers;
@@ -20,38 +20,15 @@ use Comely\Http\Query\Payload;
 use Comely\Http\Query\ResponseBody;
 
 /**
- * Class Response
- * @package Comely\Http
+ * Class AbstractResponse
+ * @package Comely\Http\Response
  */
-class Response extends AbstractReqRes
+abstract class AbstractResponse extends AbstractReqRes
 {
     /** @var null|int */
-    private $code;
+    protected $code;
     /** @var null|ResponseBody */
-    private $body;
-
-    /**
-     * If argument is passed, Sets new HTTP response code
-     * Retrieves existing HTTP response code
-     * @param int|null $new
-     * @return int
-     */
-    public function code(?int $new = null): ?int
-    {
-        if ($new && $new > 0) {
-            $this->code = $new;
-        }
-
-        return $this->code;
-    }
-
-    /**
-     * @return ResponseBody|null
-     */
-    public function body(): ?ResponseBody
-    {
-        return $this->body;
-    }
+    protected $body;
 
     /**
      * @param mixed ...$props

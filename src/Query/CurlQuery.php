@@ -18,7 +18,7 @@ use Comely\Http\Exception\HttpRequestException;
 use Comely\Http\Exception\HttpResponseException;
 use Comely\Http\Http;
 use Comely\Http\Request;
-use Comely\Http\Response;
+use Comely\Http\Response\CurlResponse;
 
 /**
  * Class CurlQuery
@@ -143,12 +143,12 @@ class CurlQuery
     }
 
     /**
-     * @return Response
+     * @return CurlResponse
      * @throws HttpRequestException
      * @throws HttpResponseException
      * @throws \Comely\Http\Exception\SSL_Exception
      */
-    public function send(): Response
+    public function send(): CurlResponse
     {
         $ch = curl_init(); // Init cURL handler
         curl_setopt($ch, CURLOPT_URL, $this->req->url()->full()); // Set URL
@@ -210,19 +210,19 @@ class CurlQuery
             curl_setopt($ch, CURLOPT_USERAGENT, $this->userAgent);
         }
 
-        // Prepare Response
-        $response = new Response();
+        // Response Headers
+        $responseHeaders = new Headers();
 
         // Finalise request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function (/** @noinspection PhpUnusedParameterInspection */
-            $ch, $line) use ($response) {
+            $ch, $line) use ($responseHeaders) {
             if (preg_match('/^[\w\-]+\:/', $line)) {
                 $header = preg_split('/:/', $line, 2);
                 $name = trim(strval($header[0] ?? null));
                 $value = trim(strval($header[1] ?? null));
                 if ($name && $value) {
-                    $response->headers()->set($name, $value);
+                    $responseHeaders->set($name, $value);
                 }
             }
 
@@ -248,14 +248,19 @@ class CurlQuery
             throw new HttpResponseException('Could not retrieve HTTP response code');
         }
 
+        // Prepare Response
+        $response = new CurlResponse($responseCode);
+        foreach ($responseHeaders as $name => $val) {
+            $response->headers()->set($name, $val);
+        }
+
         // Close cURL resource
         curl_close($ch);
 
         // Update Response object
         $responseBody = new ResponseBody($body);
         $responseBody->readOnly(true);
-        $response->code($responseCode); // Set Http response code
-        $response->override($responseBody); // Set Response raw body
+        $response->override($responseBody, $responseHeaders); // Set Response raw body and headers
 
         // Response Body
         $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) ? true : $this->expectJSON;

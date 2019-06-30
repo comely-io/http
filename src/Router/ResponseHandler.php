@@ -88,8 +88,8 @@ class ResponseHandler
         $res = $controller->response();
 
         // Set HTTP response Code
-        if ($res->code()) {
-            http_response_code($res->code());
+        if ($res->code) {
+            http_response_code($res->code);
         }
 
         // Is Explicit Content-Type specified?

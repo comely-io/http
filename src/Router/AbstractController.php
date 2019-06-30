@@ -17,7 +17,7 @@ namespace Comely\Http\Router;
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Query\Payload;
 use Comely\Http\Request;
-use Comely\Http\Response;
+use Comely\Http\Response\ControllerResponse;
 use Comely\Http\Router;
 use Comely\Utils\OOP\OOP;
 
@@ -31,7 +31,7 @@ abstract class AbstractController implements \Serializable
     private $router;
     /** @var Request */
     private $request;
-    /** @var Response */
+    /** @var ControllerResponse */
     private $response;
 
     /**
@@ -43,7 +43,7 @@ abstract class AbstractController implements \Serializable
     {
         $this->router = $router;
         $this->request = $req;
-        $this->response = new Response();
+        $this->response = new ControllerResponse();
 
         $this->callback();
     }
@@ -87,9 +87,9 @@ abstract class AbstractController implements \Serializable
     }
 
     /**
-     * @return Response
+     * @return ControllerResponse
      */
-    public function response(): Response
+    public function response(): ControllerResponse
     {
         return $this->response;
     }
@@ -177,7 +177,7 @@ abstract class AbstractController implements \Serializable
      */
     public function redirect(string $url, ?int $code = null): void
     {
-        $code = $code ?? $this->response->code();
+        $code = $code ?? $this->response->code;
         if ($code > 0) {
             http_response_code($code);
         }
