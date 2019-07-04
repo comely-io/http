@@ -15,7 +15,7 @@ declare(strict_types=1);
 namespace Comely\Http\Router;
 
 use Comely\Http\Exception\RouterException;
-use Comely\Http\Query\Payload;
+use Comely\Http\Response\ControllerResponse;
 use Comely\Http\Router;
 
 /**
@@ -39,17 +39,17 @@ class ResponseHandler
     public function __construct(Router $router)
     {
         $this->router = $router;
-        $this->default(function (Payload $payload) {
-            if ($payload->has("body")) {
-                return print $payload->get("body");
+        $this->default(function (ControllerResponse $res) {
+            if ($res->body) {
+                return print $res->body->value();
             }
 
-            return print_r($payload->array());
+            return print_r($res->payload()->array());
         });
 
         // Default handlers
-        $this->handle("application/json", function (Payload $payload) {
-            return print json_encode($payload->array());
+        $this->handle("application/json", function (ControllerResponse $res) {
+            return print json_encode($res->payload()->array());
         });
     }
 
