@@ -115,7 +115,8 @@ class RESTful
             }
         }
 
-        return array_merge($body, $payload);
+
+        return is_array($body) ? array_merge($body, $payload) : $payload;
     }
 
     /**
