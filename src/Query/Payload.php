@@ -69,7 +69,7 @@ class Payload extends AbstractDataIterator
                 $filtered = $value instanceof Binary ? $value->base16()->hexits(true) : $value->value();
             } else {
                 $filtered = json_decode(json_encode($value), true);
-                if (!$filtered) {
+                if (!is_array($filtered)) {
                     throw new \UnexpectedValueException('Could not set object/array Http Payload value');
                 }
             }
