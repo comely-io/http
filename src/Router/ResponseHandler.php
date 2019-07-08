@@ -118,7 +118,7 @@ class ResponseHandler
             $contentHandler = $this->handlers[$contentType] ?? $contentHandler;
         }
 
-        call_user_func($contentHandler, $res->payload());
+        call_user_func($contentHandler, $res);
     }
 
     /**
