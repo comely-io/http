@@ -41,6 +41,7 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     protected function setProp(Prop $prop): void
     {
         $this->data[strtolower($prop->key)] = $prop;
+        $this->count++;
     }
 
     /**
