@@ -63,8 +63,14 @@ class RESTful
         // Payload
         $req->payload()->use(self::Sanitize(self::Payload($req->method())));
 
+        // Bypass HTTP auth.
+        $bypassAuth = false;
+        if ($req->method() === "OPTIONS") {
+            $bypassAuth = true;
+        }
+
         // Get Controller
-        $controller = $router->request($req, false);
+        $controller = $router->request($req, $bypassAuth);
 
         // Callback Close
         if ($closure) {
