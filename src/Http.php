@@ -21,12 +21,12 @@ namespace Comely\Http;
 class Http
 {
     /** string Version (Major.Minor.Release-Suffix) */
-    public const VERSION = "1.0.33";
+    public const VERSION = "1.0.43";
     /** int Version (Major * 10000 + Minor * 100 + Release) */
-    public const VERSION_ID = 10033;
+    public const VERSION_ID = 10043;
 
     // HTTP methods
-    public const METHODS = ["GET", "POST", "PUT", "DELETE"];
+    public const METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
 
     // HTTP version
     public const HTTP_VERSION_1 = CURL_HTTP_VERSION_1_0;
