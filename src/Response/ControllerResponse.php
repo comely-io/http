@@ -25,6 +25,15 @@ use Comely\Http\Query\ResponseBody;
 class ControllerResponse extends AbstractResponse
 {
     /**
+     * ControllerResponse constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->code = 200; // Default 200
+    }
+
+    /**
      * @param string $prop
      * @return mixed
      */
