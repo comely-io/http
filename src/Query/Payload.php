@@ -41,7 +41,7 @@ class Payload extends AbstractDataIterator
     {
         $added = 0;
         foreach ($data as $key => $value) {
-            $this->set($key, $value);
+            $this->set(strval($key), $value);
             $added++;
         }
 
