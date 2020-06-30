@@ -197,7 +197,12 @@ class CurlQuery
 
         // Headers
         if ($this->req->headers()->count()) {
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->req->headers()->array());
+            $httpHeaders = [];
+            foreach ($this->req->headers()->array() as $hn => $hv) {
+                $httpHeaders[] = $hn . ": " . $hv;
+            }
+
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $httpHeaders);
         }
 
         // Authentication
@@ -217,7 +222,7 @@ class CurlQuery
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, function (/** @noinspection PhpUnusedParameterInspection */
             $ch, $line) use ($responseHeaders) {
-            if (preg_match('/^[\w\-]+\:/', $line)) {
+            if (preg_match('/^[\w\-]+:/', $line)) {
                 $header = preg_split('/:/', $line, 2);
                 $name = trim(strval($header[0] ?? null));
                 $value = trim(strval($header[1] ?? null));
