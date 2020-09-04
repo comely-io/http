@@ -296,7 +296,9 @@ class CurlQuery
                 throw new HttpResponseException('An error occurred while decoding JSON body');
             }
 
-            $response->payload()->use($json);
+            if(is_array($json)) {
+                $response->payload()->use($json);
+            }
         }
 
         return $response;
