@@ -78,7 +78,7 @@ class CurlQuery
     /**
      * @return Authentication
      */
-    public function auth(): AuthenticationresponseType
+    public function auth(): Authentication
     {
         if (!$this->auth) {
             $this->auth = new Authentication();
