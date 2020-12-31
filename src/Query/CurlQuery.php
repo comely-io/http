@@ -44,6 +44,8 @@ class CurlQuery
     private $expectJSON_ignoreResContentType;
     /** @var bool */
     private $debug;
+    /** @var string */
+    private string $responseType;
 
     /**
      * CurlQuery constructor.
@@ -76,26 +78,13 @@ class CurlQuery
     /**
      * @return Authentication
      */
-    public function auth(): Authentication
+    public function auth(): AuthenticationresponseType
     {
         if (!$this->auth) {
             $this->auth = new Authentication();
         }
 
         return $this->auth;
-    }
-
-    /**
-     * @return SSL
-     * @throws \Comely\Http\Exception\SSL_Exception
-     */
-    public function ssl(): SSL
-    {
-        if (!$this->ssl) {
-            $this->ssl = new SSL();
-        }
-
-        return $this->ssl;
     }
 
     /**
@@ -109,6 +98,16 @@ class CurlQuery
         }
 
         $this->httpVersion = $version;
+        return $this;
+    }
+
+    /**
+     * @param string|null $responseType
+     * @return $this
+     */
+    public function forceResponseType(?string $responseType = null): self
+    {
+        $this->responseType = $responseType ?? "application/json; charset=utf-8";
         return $this;
     }
 
@@ -271,16 +270,21 @@ class CurlQuery
         $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) ? true : $this->expectJSON;
         if ($responseIsJSON) {
             if (!$this->expectJSON_ignoreResContentType) {
+                if ($this->responseType) {
+                    $responseType = $this->responseType;
+                }
                 if (!is_string($responseType)) {
                     throw new HttpResponseException('Invalid "Content-type" header received, expecting JSON', $responseCode);
                 }
 
                 if (strtolower(trim(explode(";", $responseType)[0])) !== "application/json") {
+
                     throw new HttpResponseException(
                         sprintf('Expected "application/json", got "%s"', $responseType),
                         $responseCode
                     );
                 }
+
             }
 
             // Decode JSON body
@@ -296,11 +300,24 @@ class CurlQuery
                 throw new HttpResponseException('An error occurred while decoding JSON body');
             }
 
-            if(is_array($json)) {
+            if (is_array($json)) {
                 $response->payload()->use($json);
             }
         }
 
         return $response;
+    }
+
+    /**
+     * @return SSL
+     * @throws \Comely\Http\Exception\SSL_Exception
+     */
+    public function ssl(): SSL
+    {
+        if (!$this->ssl) {
+            $this->ssl = new SSL();
+        }
+
+        return $this->ssl;
     }
 }
