@@ -70,7 +70,7 @@ abstract class AbstractController implements \Serializable
     }
 
     /**
-     * @param string $serialized
+     * @param $serialized
      * @return void
      */
     public function unserialize($serialized)
