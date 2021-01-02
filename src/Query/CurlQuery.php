@@ -44,6 +44,10 @@ class CurlQuery
     private $expectJSON_ignoreResContentType;
     /** @var bool */
     private $debug;
+    /** @var int */
+    private $timeOut;
+    /** @var int */
+    private $connectTimeOut;
 
     /**
      * CurlQuery constructor.
@@ -87,7 +91,6 @@ class CurlQuery
 
     /**
      * @return SSL
-     * @throws \Comely\Http\Exception\SSL_Exception
      */
     public function ssl(): SSL
     {
@@ -143,10 +146,31 @@ class CurlQuery
     }
 
     /**
+     * @param int|null $timeOut
+     * @param int|null $connectTimeout
+     * @return $this
+     */
+    public function setTimeouts(?int $timeOut = null, ?int $connectTimeout = null): self
+    {
+        if ($timeOut > 0) {
+            $this->timeOut = $timeOut;
+        }
+
+        if ($connectTimeout > 0) {
+            $this->connectTimeOut = $connectTimeout;
+        }
+
+        if ($connectTimeout > $timeOut) {
+            throw new \InvalidArgumentException('connectTimeout value cannot exceed timeOut');
+        }
+
+        return $this;
+    }
+
+    /**
      * @return CurlResponse
      * @throws HttpRequestException
      * @throws HttpResponseException
-     * @throws \Comely\Http\Exception\SSL_Exception
      */
     public function send(): CurlResponse
     {
@@ -213,6 +237,15 @@ class CurlQuery
         // User agent
         if ($this->userAgent) {
             curl_setopt($ch, CURLOPT_USERAGENT, $this->userAgent);
+        }
+
+        // Timeouts
+        if ($this->timeOut) {
+            curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeOut);
+        }
+
+        if ($this->connectTimeOut) {
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->connectTimeOut);
         }
 
         // Response Headers
@@ -296,7 +329,7 @@ class CurlQuery
                 throw new HttpResponseException('An error occurred while decoding JSON body');
             }
 
-            if(is_array($json)) {
+            if (is_array($json)) {
                 $response->payload()->use($json);
             }
         }
