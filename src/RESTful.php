@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -30,7 +30,6 @@ class RESTful
      * @throws Exception\HttpRequestException
      * @throws Exception\RouterException
      * @throws RESTfulException
-     * @throws \ReflectionException
      */
     public static function Request(Router $router, \Closure $closure): AbstractController
     {
@@ -38,7 +37,7 @@ class RESTful
         $url = $_SERVER["REQUEST_URI"] ?? "";
 
         // Check if URL not rewritten properly (i.e. called /index.php/some/controller)
-        if (preg_match('/^\/?[\w\-\.]+\.php\//', $url)) {
+        if (preg_match('/^\/?[\w\-.]+\.php\//', $url)) {
             $url = explode("/", $url);
             unset($url[1]);
             $url = implode("/", $url);
@@ -48,7 +47,6 @@ class RESTful
 
         // Headers
         foreach ($_SERVER as $key => $value) {
-            $value = filter_var(strval($value), FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
             $key = explode("_", $key);
             if ($key[0] === "HTTP") {
                 unset($key[0]);
@@ -61,7 +59,52 @@ class RESTful
         }
 
         // Payload
-        $req->payload()->use(self::Sanitize(self::Payload($req->method())));
+        $payload = []; // Initiate payload
+        $contentType = strtolower(trim(explode(";", $_SERVER["CONTENT_TYPE"] ?? "")[0]));
+
+        // Ready query string
+        if (isset($_SERVER["QUERY_STRING"])) {
+            parse_str($_SERVER["QUERY_STRING"], $payload);
+        }
+
+        // Get input body from stream
+        $params = null;
+        $stream = file_get_contents("php://input");
+        if ($stream) {
+            $req->body()->append($stream); // Append "as-is" (Un-sanitized) body to request
+            switch ($contentType) {
+                case "application/json":
+                    $json = json_decode($stream, true);
+                    if (is_array($json)) {
+                        $params = $json;
+                    } elseif (is_scalar($json) || is_null($json)) {
+                        $params = ["_json" => $json];
+                    }
+
+                    break;
+                case "application/x-www-form-urlencoded":
+                    parse_str($stream, $params);
+                    break;
+                case "multipart/form-data":
+                    if (strtolower($method) === "post") {
+                        $params = $_POST; // Simply use $_POST var;
+                    }
+
+                    break;
+            }
+        }
+
+        if (is_array($params)) {
+            $payload = array_merge($params, $payload);
+        }
+
+        // Set to payload
+        foreach ($payload as $key => $value) {
+            try {
+                $req->payload()->set(strval($key), $value);
+            } catch (\Exception) {
+            }
+        }
 
         // Bypass HTTP auth.
         $bypassAuth = false;
@@ -78,77 +121,5 @@ class RESTful
         }
 
         return $controller;
-    }
-
-    /**
-     * @param string $method
-     * @return array
-     * @throws RESTfulException
-     */
-    public static function Payload(string $method): array
-    {
-        $payload = []; // Initiate payload
-        $contentType = strtolower(trim(explode(";", $_SERVER["CONTENT_TYPE"] ?? "")[0]));
-
-        // Ready query string
-        if (isset($_SERVER["QUERY_STRING"])) {
-            parse_str($_SERVER["QUERY_STRING"], $payload);
-        }
-
-        // Get input body from stream
-        $body = null;
-        $stream = file_get_contents("php://input");
-        if ($stream) {
-            switch ($contentType) {
-                case "application/json":
-                    $body = json_decode($stream, true);
-                    break;
-                case "application/x-www-form-urlencoded":
-                    $body = [];
-                    parse_str($stream, $body);
-                    break;
-                case "multipart/form-data":
-                    if ($method !== "POST") {
-                        throw RESTfulException::payloadMethodTypeError($method, $contentType);
-                    }
-
-                    $body = $_POST; // Simply use $_POST var;
-                    break;
-            }
-
-            if (!is_array($body)) {
-                throw RESTfulException::payloadStreamError($method, $contentType);
-            }
-        }
-
-
-        return is_array($body) ? array_merge($body, $payload) : $payload;
-    }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    public static function Sanitize(array $data): array
-    {
-        $sanitized = [];
-        foreach ($data as $key => $value) {
-            $key = strval($key);
-            if (!preg_match('/^[\w\-\.]+$/i', $key)) {
-                continue; // Invalid key; Skip
-            }
-
-            if (is_scalar($value)) {
-                if (is_string($value)) {
-                    $value = filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW);
-                }
-
-                $sanitized[$key] = $value;
-            } elseif (is_array($value)) {
-                $sanitized[$key] = self::Sanitize($value);
-            }
-        }
-
-        return $sanitized;
     }
 }

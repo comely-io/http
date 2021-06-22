@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -21,9 +21,9 @@ namespace Comely\Http;
 class Http
 {
     /** string Version (Major.Minor.Release-Suffix) */
-    public const VERSION = "1.0.49";
+    public const VERSION = "2.0.0";
     /** int Version (Major * 10000 + Minor * 100 + Release) */
-    public const VERSION_ID = 10049;
+    public const VERSION_ID = 20000;
 
     // HTTP methods
     public const METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];

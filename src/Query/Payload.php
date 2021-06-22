@@ -56,7 +56,7 @@ class Payload extends AbstractDataIterator
     public function set(string $key, $value): self
     {
         // Key
-        if (!preg_match('/^[\w\-]+$/i', $key)) {
+        if (!preg_match('/^[\w\-.]+$/i', $key)) {
             throw new \InvalidArgumentException('Invalid HTTP payload key');
         }
 
