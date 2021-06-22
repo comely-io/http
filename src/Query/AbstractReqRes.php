@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Comely\Http\Query;
 
+use Comely\Buffer\Buffer;
+
 /**
  * Class AbstractReqRes
  * @package Comely\Http\Query
@@ -24,6 +26,8 @@ abstract class AbstractReqRes
     protected Headers $headers;
     /** @var Payload */
     protected Payload $payload;
+    /** @var Buffer */
+    protected Buffer $body;
 
     /**
      * AbstractReqRes constructor.
@@ -32,6 +36,7 @@ abstract class AbstractReqRes
     {
         $this->headers = new Headers();
         $this->payload = new Payload();
+        $this->body = new Buffer();
     }
 
     /**
@@ -48,6 +53,14 @@ abstract class AbstractReqRes
     public function payload(): Payload
     {
         return $this->payload;
+    }
+
+    /**
+     * @return Buffer
+     */
+    public function body(): Buffer
+    {
+        return $this->body;
     }
 
     /**
