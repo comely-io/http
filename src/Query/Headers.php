@@ -31,7 +31,17 @@ class Headers extends AbstractDataIterator
             throw new \InvalidArgumentException('Invalid HTTP header key');
         }
 
-        $this->setProp(new DataProp($name, $value));
+        // Sanitize header value
+        $value = filter_var(
+            trim($value),
+            FILTER_UNSAFE_RAW,
+            FILTER_FLAG_STRIP_LOW | FILTER_FLAG_NO_ENCODE_QUOTES
+        );
+
+        if ($value) {
+            $this->setProp(new DataProp($name, $value));
+        }
+
         return $this;
     }
 
