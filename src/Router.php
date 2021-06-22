@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -18,7 +18,6 @@ use Comely\Http\Exception\RouterException;
 use Comely\Http\Router\AbstractController;
 use Comely\Http\Router\ResponseHandler;
 use Comely\Http\Router\Route;
-use Comely\Utils\OOP\OOP;
 
 /**
  * Class Router
@@ -27,23 +26,20 @@ use Comely\Utils\OOP\OOP;
 class Router
 {
     /** @var array */
-    private $routes;
+    private array $routes = [];
     /** @var int */
-    private $count;
+    private int $count = 0;
     /** @var null|string */
-    private $fallbackController;
+    private ?string $fallbackController = null;
     /** @var ResponseHandler */
-    private $respHandler;
+    private ResponseHandler $respHandler;
 
     /**
      * Router constructor.
-     * @throws RouterException
      */
     public function __construct()
     {
-        $this->routes = [];
-        $this->count = 0;
-        $this->respHandler = new ResponseHandler($this);
+        $this->respHandler = new ResponseHandler();
     }
 
     /**
@@ -64,12 +60,12 @@ class Router
 
     /**
      * @param string $controller
-     * @return Router
+     * @return $this
      * @throws RouterException
      */
     public function fallbackController(string $controller): self
     {
-        if (!OOP::isValidClass($controller)) {
+        if (!class_exists($controller)) {
             throw new RouterException('Default router fallback controller class is invalid or does not exist');
         }
 
@@ -96,7 +92,6 @@ class Router
      * @param bool $bypassHttpAuth
      * @return AbstractController
      * @throws RouterException
-     * @throws \ReflectionException
      */
     public function request(Request $req, bool $bypassHttpAuth = false): AbstractController
     {
@@ -115,9 +110,13 @@ class Router
             throw new RouterException('Could not route request to any controller');
         }
 
-        $reflect = new \ReflectionClass($controller);
-        if (!$reflect->isSubclassOf('Comely\Http\Router\AbstractController')) {
-            throw new RouterException('Controller class does not extend "Comely\Http\Router\AbstractController"');
+        try {
+            $reflect = new \ReflectionClass($controller);
+            if (!$reflect->isSubclassOf('Comely\Http\Router\AbstractController')) {
+                throw new RouterException('Controller class does not extend "Comely\Http\Router\AbstractController"');
+            }
+        } catch (\ReflectionException) {
+            throw new RouterException('Could not get reflection instance for controller class');
         }
 
         return new $controller($this, $req);

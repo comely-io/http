@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -28,12 +28,10 @@ use Comely\Http\Router\AbstractController;
  */
 class Request extends AbstractReqRes
 {
-    /** @var null|int */
-    protected $version;
     /** @var string */
-    protected $method;
-    /** @var string */
-    protected $url;
+    protected string $method;
+    /** @var URL */
+    protected URL $url;
 
     /**
      * Request constructor.
@@ -98,7 +96,6 @@ class Request extends AbstractReqRes
      * @return AbstractController
      * @throws Exception\RouterException
      * @throws HttpRequestException
-     * @throws \ReflectionException
      */
     public function routeToController(Router $router): AbstractController
     {
