@@ -35,7 +35,7 @@ class Headers extends AbstractDataIterator
         $value = filter_var(
             trim($value),
             FILTER_UNSAFE_RAW,
-            FILTER_FLAG_STRIP_LOW | FILTER_FLAG_NO_ENCODE_QUOTES
+            FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH
         );
 
         if ($value) {
