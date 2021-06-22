@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -26,23 +26,23 @@ use Comely\Utils\OOP\OOP;
 class Route
 {
     /** @var int */
-    private $id;
+    private int $id;
     /** @var Router */
-    private $router;
+    private Router $router;
     /** @var string */
-    private $url;
+    private string $url;
     /** @var string */
-    private $matchPattern;
+    private string $matchPattern;
     /** @var string */
-    private $controller;
+    private string $controller;
     /** @var bool */
-    private $isNamespace;
+    private bool $isNamespace;
     /** @var array */
-    private $ignorePathIndexes;
+    private array $ignorePathIndexes = [];
     /** @var null|string */
-    private $fallbackController;
+    private ?string $fallbackController = null;
     /** @var null|Router\Authentication\AbstractAuth */
-    private $auth;
+    private ?Router\Authentication\AbstractAuth $auth = null;
 
     /**
      * Route constructor.
@@ -58,17 +58,17 @@ class Route
 
         // URL
         $url = "/" . trim(strtolower($url), "/"); // Case-insensitivity
-        if (!preg_match('/^((\/?[\w\-\.]+)|(\/\*))*(\/\*)?$/', $url)) {
+        if (!preg_match('/^((\/?[\w\-.]+)|(\/\*))*(\/\*)?$/', $url)) {
             throw new RouteException('Route URL argument contain an illegal character', $this->id);
         }
 
         // Controller or Namespace
-        if (!preg_match('/^\w+(\\\\\w+)*(\\\\\*){0,1}$/i', $namespaceOrClass)) {
+        if (!preg_match('/^\w+(\\\\\w+)*(\\\\\*)?$/i', $namespaceOrClass)) {
             throw new RouteException('Class or namespace contains an illegal character', $this->id);
         }
 
-        $urlIsWildcard = substr($url, -2) === '/*' ? true : false;
-        $controllerIsWildcard = substr($namespaceOrClass, -2) === '\*' ? true : false;
+        $urlIsWildcard = substr($url, -2) === '/*';
+        $controllerIsWildcard = substr($namespaceOrClass, -2) === '\*';
         if ($controllerIsWildcard && !$urlIsWildcard) {
             throw new RouteException('Route URL must end with "/*"', $this->id);
         }
@@ -76,7 +76,7 @@ class Route
         $this->url = $url;
         $this->matchPattern = $this->pattern();
         $this->controller = $namespaceOrClass;
-        $this->isNamespace = $controllerIsWildcard ? true : false;
+        $this->isNamespace = $controllerIsWildcard;
         $this->ignorePathIndexes = [];
     }
 
@@ -100,7 +100,7 @@ class Route
      */
     public function fallbackController(string $controller): self
     {
-        if (!OOP::isValidClass($controller)) {
+        if (!class_exists($controller)) {
             throw new RouteException('Fallback controller class is invalid or does not exist', $this->id);
         }
 
@@ -173,7 +173,7 @@ class Route
         }
 
         // Find HTTP Controller
-        $controllerClass = null;
+        $controllerClass = $this->controller;
         if ($this->isNamespace) {
             $pathIndex = -1;
             $controllerClass = array_map(function ($part) use (&$pathIndex) {
@@ -189,8 +189,6 @@ class Route
             $controllerClass = sprintf('%s\%s', $namespace, implode('\\', $controllerClass));
             $controllerClass = preg_replace('/\\\{2,}/', '\\', $controllerClass);
             $controllerClass = rtrim($controllerClass, '\\');
-        } else {
-            $controllerClass = $this->controller;
         }
 
         return $controllerClass && class_exists($controllerClass) ? $controllerClass : $this->fallbackController;
