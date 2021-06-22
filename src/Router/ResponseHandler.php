@@ -35,8 +35,8 @@ class ResponseHandler
     public function __construct()
     {
         $this->default(function (ControllerResponse $res) {
-            if ($res->body) {
-                return print $res->body->value();
+            if ($res->body()) {
+                return print $res->body()->raw();
             }
 
             return print_r($res->payload()->array());
@@ -83,8 +83,8 @@ class ResponseHandler
         $res = $controller->response();
 
         // Set HTTP response Code
-        if ($res->code) {
-            http_response_code($res->code);
+        if ($res->getHttpCode()) {
+            http_response_code($res->getHttpCode());
         }
 
         // Is Explicit Content-Type specified?
