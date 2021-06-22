@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace Comely\Http;
 
+use Comely\Buffer\Buffer;
 use Comely\Http\Exception\HttpRequestException;
 use Comely\Http\Query\AbstractReqRes;
 use Comely\Http\Query\CurlQuery;
@@ -69,9 +70,9 @@ class Request extends AbstractReqRes
     }
 
     /**
-     * @param mixed ...$props
+     * @param Headers|Payload|Buffer|URL ...$props
      */
-    public function override(...$props): void
+    public function override(Headers|Payload|Buffer|URL ...$props): void
     {
         foreach ($props as $prop) {
             if ($prop instanceof Headers) {
@@ -86,6 +87,11 @@ class Request extends AbstractReqRes
 
             if ($prop instanceof URL) {
                 $this->url = $prop;
+                return;
+            }
+
+            if ($prop instanceof Buffer) {
+                $this->body = $prop;
                 return;
             }
         }

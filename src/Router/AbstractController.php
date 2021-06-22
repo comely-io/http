@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -20,19 +20,24 @@ use Comely\Http\Request;
 use Comely\Http\Response\ControllerResponse;
 use Comely\Http\Router;
 use Comely\Utils\OOP\OOP;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class AbstractController
  * @package Comely\Http\Router
  */
-abstract class AbstractController implements \Serializable
+abstract class AbstractController
 {
     /** @var Router */
-    private $router;
+    private Router $router;
     /** @var Request */
-    private $request;
+    private Request $request;
     /** @var ControllerResponse */
-    private $response;
+    private ControllerResponse $response;
+
+    use NotCloneableTrait;
+    use NotSerializableTrait;
 
     /**
      * AbstractController constructor.
@@ -52,31 +57,6 @@ abstract class AbstractController implements \Serializable
      * @return void
      */
     abstract public function callback(): void;
-
-    /**
-     * @return void
-     */
-    public function __clone()
-    {
-        throw new \BadMethodCallException('Controller instances cannot be cloned');
-    }
-
-    /**
-     * @return void
-     */
-    public function serialize()
-    {
-        throw new \BadMethodCallException('Controller instances cannot be serialized');
-    }
-
-    /**
-     * @param $serialized
-     * @return void
-     */
-    public function unserialize($serialized)
-    {
-        throw new \BadMethodCallException('Controller instances cannot be un-serialized');
-    }
 
     /**
      * @return Request
@@ -165,7 +145,8 @@ abstract class AbstractController implements \Serializable
         $req = new Request($method ?? $this->request->method(), $pathOrController);
         $req->override(
             clone $this->request->headers(),
-            clone $this->request->payload()
+            clone $this->request->payload(),
+            clone $this->request->body()
         );
 
         return $this->router->request($req, $bypassHttpAuth);
@@ -177,7 +158,7 @@ abstract class AbstractController implements \Serializable
      */
     public function redirect(string $url, ?int $code = null): void
     {
-        $code = $code ?? $this->response->code;
+        $code = $code ?? $this->response->getHttpCode();
         if ($code > 0) {
             http_response_code($code);
         }

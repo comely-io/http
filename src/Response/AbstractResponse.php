@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -14,10 +14,10 @@ declare(strict_types=1);
 
 namespace Comely\Http\Response;
 
+use Comely\Buffer\Buffer;
 use Comely\Http\Query\AbstractReqRes;
 use Comely\Http\Query\Headers;
 use Comely\Http\Query\Payload;
-use Comely\Http\Query\ResponseBody;
 
 /**
  * Class AbstractResponse
@@ -26,14 +26,12 @@ use Comely\Http\Query\ResponseBody;
 abstract class AbstractResponse extends AbstractReqRes
 {
     /** @var null|int */
-    protected $code;
-    /** @var null|ResponseBody */
-    protected $body;
+    protected ?int $code = null;
 
     /**
-     * @param mixed ...$props
+     * @param Headers|Payload|Buffer ...$props
      */
-    public function override(...$props): void
+    public function override(Headers|Payload|Buffer ...$props): void
     {
         foreach ($props as $prop) {
             if ($prop instanceof Headers) {
@@ -46,7 +44,7 @@ abstract class AbstractResponse extends AbstractReqRes
                 return;
             }
 
-            if ($prop instanceof ResponseBody) {
+            if ($prop instanceof Buffer) {
                 $this->body = $prop;
                 return;
             }

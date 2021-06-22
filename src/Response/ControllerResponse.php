@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -14,13 +14,9 @@ declare(strict_types=1);
 
 namespace Comely\Http\Response;
 
-use Comely\Http\Query\ResponseBody;
-
 /**
  * Class ControllerResponse
  * @package Comely\Http\Response
- * @property-read null|int $code
- * @property-read null|ResponseBody $body
  */
 class ControllerResponse extends AbstractResponse
 {
@@ -31,21 +27,6 @@ class ControllerResponse extends AbstractResponse
     {
         parent::__construct();
         $this->code = 200; // Default 200
-    }
-
-    /**
-     * @param string $prop
-     * @return mixed
-     */
-    public function __get(string $prop)
-    {
-        switch ($prop) {
-            case "code":
-            case "body":
-                return $this->$prop;
-        }
-
-        throw new \DomainException('Cannot get value of inaccessible property');
     }
 
     /**
@@ -74,19 +55,17 @@ class ControllerResponse extends AbstractResponse
      * @param int $httpStatusCode
      * @return ControllerResponse
      */
-    public function code(int $httpStatusCode): self
+    public function setHttpCode(int $httpStatusCode): self
     {
         $this->code = $httpStatusCode;
         return $this;
     }
 
     /**
-     * @param string $bodyContent
-     * @return ControllerResponse
+     * @return int
      */
-    public function body(string $bodyContent): self
+    public function getHttpCode(): int
     {
-        $this->body = new ResponseBody($bodyContent);
-        return $this;
+        return $this->code;
     }
 }
