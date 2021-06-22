@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -21,9 +21,9 @@ namespace Comely\Http\Query;
 abstract class AbstractReqRes
 {
     /** @var Headers */
-    protected $headers;
+    protected Headers $headers;
     /** @var Payload */
-    protected $payload;
+    protected Payload $payload;
 
     /**
      * AbstractReqRes constructor.
