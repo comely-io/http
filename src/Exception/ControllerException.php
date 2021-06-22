@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -12,22 +12,12 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
-
-use Comely\DataTypes\Buffer\AbstractBuffer;
+namespace Comely\Http\Exception;
 
 /**
- * Class ResponseBody
- * @package Comely\Http\Query
+ * Class ControllerException
+ * @package Comely\Http\Exception
  */
-class ResponseBody extends AbstractBuffer
+class ControllerException extends RouterException
 {
-    /**
-     * @param string|null $data
-     * @return string
-     */
-    public function validatedDataTypeValue(?string $data): string
-    {
-        return $data ?? "";
-    }
 }
