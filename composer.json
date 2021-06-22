@@ -13,11 +13,11 @@
     }
   ],
   "require": {
-    "php": "^7.1",
+    "php": "^8.0",
     "ext-json": "*",
     "ext-curl": "*",
-    "comely-io/data-types": "^1.0.21",
-    "comely-io/utils": "^1.0.10"
+    "comely-io/buffer-php": "^0.1.1",
+    "comely-io/utils": "^2.0.2"
   },
   "autoload": {
     "psr-4": {
