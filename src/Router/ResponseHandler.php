@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -16,7 +16,6 @@ namespace Comely\Http\Router;
 
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Response\ControllerResponse;
-use Comely\Http\Router;
 
 /**
  * Class ResponseHandler
@@ -24,21 +23,17 @@ use Comely\Http\Router;
  */
 class ResponseHandler
 {
-    /** @var Router */
-    private $router;
     /** @var array */
-    private $handlers;
+    private array $handlers;
     /** @var \Closure */
-    private $default;
+    private \Closure $default;
 
     /**
      * ResponseHandler constructor.
-     * @param Router $router
      * @throws RouterException
      */
-    public function __construct(Router $router)
+    public function __construct()
     {
-        $this->router = $router;
         $this->default(function (ControllerResponse $res) {
             if ($res->body) {
                 return print $res->body->value();
