@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -21,24 +21,15 @@ namespace Comely\Http\Query;
 abstract class AbstractDataIterator implements \Iterator, \Countable
 {
     /** @var array */
-    protected $data;
+    protected array $data = [];
     /** @var int */
-    protected $count;
+    protected int $count = 0;
 
     /**
-     * AbstractDataIterator constructor.
-     */
-    public function __construct()
-    {
-        $this->data = [];
-        $this->count = 0;
-    }
-
-    /**
-     * @param Prop $prop
+     * @param DataProp $prop
      * @return void
      */
-    protected function setProp(Prop $prop): void
+    protected function setProp(DataProp $prop): void
     {
         $this->data[strtolower($prop->key)] = $prop;
         $this->count++;
@@ -46,9 +37,9 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
 
     /**
      * @param string $key
-     * @return Prop|null
+     * @return DataProp|null
      */
-    protected function getProp(string $key): ?Prop
+    protected function getProp(string $key): ?DataProp
     {
         return $this->data[strtolower($key)] ?? null;
     }
@@ -68,8 +59,8 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     final public function array(): array
     {
         $array = [];
-        /** @var Prop $prop */
-        foreach ($this->data as $key => $prop) {
+        /** @var DataProp $prop */
+        foreach ($this->data as $prop) {
             $array[$prop->key] = $prop->value;
         }
 
@@ -93,11 +84,11 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     }
 
     /**
-     * @return mixed
+     * @return string|int|float|array|null
      */
-    final public function current()
+    final public function current(): string|int|float|array|null
     {
-        /** @var Prop $prop */
+        /** @var DataProp $prop */
         $prop = current($this->data);
         return $prop->value;
     }
@@ -107,7 +98,7 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
      */
     final public function key(): string
     {
-        /** @var Prop $prop */
+        /** @var DataProp $prop */
         $prop = $this->data[key($this->data)];
         return $prop->key;
     }
@@ -125,6 +116,6 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
      */
     final public function valid(): bool
     {
-        return is_null(key($this->data)) ? false : true;
+        return !is_null(key($this->data));
     }
 }
