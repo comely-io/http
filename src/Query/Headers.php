@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -27,21 +27,21 @@ class Headers extends AbstractDataIterator
      */
     public function set(string $name, string $value): self
     {
-        if (!preg_match('/^[\w\-\.]+$/i', $name)) {
+        if (!preg_match('/^[\w\-.]+$/i', $name)) {
             throw new \InvalidArgumentException('Invalid HTTP header key');
         }
 
-        $this->setProp(new Prop($name, $value));
+        $this->setProp(new DataProp($name, $value));
         return $this;
     }
 
     /**
      * @param string $name
-     * @return string|null
+     * @return string|int|float|array|null
      */
-    public function get(string $name): ?string
+    public function get(string $name): string|int|float|array|null
     {
         $prop = $this->getProp($name);
-        return $prop ? $prop->value : null;
+        return $prop?->value;
     }
 }

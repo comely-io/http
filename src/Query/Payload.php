@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -14,8 +14,7 @@ declare(strict_types=1);
 
 namespace Comely\Http\Query;
 
-use Comely\DataTypes\Buffer\AbstractBuffer;
-use Comely\DataTypes\Buffer\Binary;
+use Comely\Buffer\AbstractByteArray;
 
 /**
  * Class Payload
@@ -63,18 +62,19 @@ class Payload extends AbstractDataIterator
         // Value
         $prop = null;
         if (is_scalar($value) || is_null($value)) {
-            $prop = new Prop($key, $value); // Scalar or NULL type
+            $prop = new DataProp($key, $value); // Scalar or NULL type
         } elseif (is_array($value) || is_object($value)) {
-            if ($value instanceof AbstractBuffer) {
-                $filtered = $value instanceof Binary ? $value->base16()->hexits(true) : $value->value();
+            if ($value instanceof AbstractByteArray) {
+                $filtered = $value->toBase16(true);
             } else {
-                $filtered = json_decode(json_encode($value), true);
-                if (!is_array($filtered)) {
-                    throw new \UnexpectedValueException('Could not set object/array Http Payload value');
+                try {
+                    $filtered = json_decode(json_encode($value, JSON_THROW_ON_ERROR), true, flags: JSON_THROW_ON_ERROR);
+                } catch (\JsonException) {
+                    throw new \UnexpectedValueException(sprintf('JSON filter fail on prop value of type "%s"', gettype($value)));
                 }
             }
 
-            $prop = new Prop($key, $filtered); // Safe array
+            $prop = new DataProp($key, $filtered); // Safe array
         }
 
         if (!$prop) {
@@ -90,9 +90,9 @@ class Payload extends AbstractDataIterator
     /**
      * Special method to retrieve values from child arrays (i.e. "user.prop1.prop1b" => $user["prop1"]["prop1b"])
      * @param string $key
-     * @return array|float|int|mixed|string|null
+     * @return string|int|float|array|null
      */
-    public function find(string $key)
+    public function find(string $key): string|int|float|array|null
     {
         if (!preg_match('/^[\w\-]+(\.[\w\-]+)+$/i', $key)) {
             return $this->get($key);
@@ -116,11 +116,11 @@ class Payload extends AbstractDataIterator
 
     /**
      * @param string $prop
-     * @return array|float|int|string|null
+     * @return string|int|float|array|null
      */
-    public function get(string $prop)
+    public function get(string $prop): string|int|float|array|null
     {
         $prop = $this->getProp($prop);
-        return $prop ? $prop->value : null;
+        return $prop?->value;
     }
 }
