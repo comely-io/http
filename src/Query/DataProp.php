@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -15,24 +15,17 @@ declare(strict_types=1);
 namespace Comely\Http\Query;
 
 /**
- * Class Prop
+ * Class DataProp
  * @package Comely\Http\Query
  */
-class Prop
+class DataProp
 {
-    /** @var string */
-    public $key;
-    /** @var null|string|int|float|array */
-    public $value;
-
     /**
-     * Prop constructor.
+     * DataProp constructor.
      * @param string $key
-     * @param $value
+     * @param string|int|float|array|null $value
      */
-    public function __construct(string $key, $value)
+    public function __construct(public string $key, public string|int|float|array|null $value = null)
     {
-        $this->key = $key;
-        $this->value = $value;
     }
 }
