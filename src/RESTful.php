@@ -54,7 +54,10 @@ class RESTful
                     return ucfirst(strtolower($part));
                 }, $key);
 
-                $req->headers()->set(implode("-", $key), $value);
+                try {
+                    $req->headers()->set(implode("-", $key), $value);
+                } catch (\Exception) {
+                }
             }
         }
 
@@ -94,7 +97,7 @@ class RESTful
             }
         }
 
-        if (is_array($params)) {
+        if (is_array($params)) { // Merge body and URL params
             $payload = array_merge($params, $payload);
         }
 
