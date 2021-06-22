@@ -1,5 +1,5 @@
-<?php
-/**
+<?php /** @noinspection PhpUnusedPrivateFieldInspection */
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -23,9 +23,9 @@ namespace Comely\Http\Router\Authentication;
 class AuthUser
 {
     /** @var string */
-    private $username;
+    private string $username;
     /** @var string */
-    private $password;
+    private string $password;
 
     /**
      * AuthUser constructor.

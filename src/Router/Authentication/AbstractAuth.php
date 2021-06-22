@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -21,11 +21,11 @@ namespace Comely\Http\Router\Authentication;
 abstract class AbstractAuth
 {
     /** @var string */
-    protected $realm;
+    protected string $realm;
     /** @var array */
-    protected $users;
+    protected array $users = [];
     /** @var null|callable */
-    protected $unauthorized;
+    protected $unauthorized = null;
 
     /**
      * Authentication constructor.
@@ -34,7 +34,6 @@ abstract class AbstractAuth
     public function __construct(string $realm)
     {
         $this->realm = $realm;
-        $this->users = [];
     }
 
     /**
@@ -42,7 +41,7 @@ abstract class AbstractAuth
      * @param string $password
      * @return $this
      */
-    final public function user(string $username, string $password)
+    final public function user(string $username, string $password): static
     {
         $this->users[$username] = new AuthUser($username, $password);
         return $this;
@@ -52,14 +51,14 @@ abstract class AbstractAuth
      * @param callable $callback
      * @return $this
      */
-    final public function unauthorized(callable $callback)
+    final public function unauthorized(callable $callback): static
     {
         $this->unauthorized = $callback;
         return $this;
     }
 
     /**
-     * @param string $authorization
+     * @param string|null $authorization
      */
     abstract public function authenticate(?string $authorization): void;
 }
