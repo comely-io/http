@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -23,13 +23,13 @@ use Comely\Http\Exception\HttpRequestException;
 class URL
 {
     /** @var string */
-    private $url;
+    private string $url;
     /** @var array */
-    private $parsed;
+    private array $parsed;
     /** @var string|null */
-    private $path;
+    private ?string $path;
     /** @var array */
-    private $pathParts;
+    private array $pathParts;
 
     /**
      * URL constructor.
