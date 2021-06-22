@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -27,27 +27,27 @@ use Comely\Http\Response\CurlResponse;
 class CurlQuery
 {
     /** @var Request */
-    private $req;
+    private Request $req;
     /** @var null|int */
-    private $httpVersion;
+    private ?int $httpVersion = null;
     /** @var null|string */
-    private $userAgent;
+    private ?string $userAgent = null;
     /** @var null|Authentication */
-    private $auth;
+    private ?Authentication $auth = null;
     /** @var null|SSL */
-    private $ssl;
+    private ?SSL $ssl = null;
     /** @var bool Send payload as application/json regardless of content-type */
-    private $contentTypeJSON;
+    private bool $contentTypeJSON = false;
     /** @var bool Expect JSON body in response */
-    private $expectJSON;
+    private bool $expectJSON = false;
     /** @var bool If expectJSON is true, use this prop to ignore received content-type */
-    private $expectJSON_ignoreResContentType;
+    private bool $expectJSON_ignoreResContentType = false;
     /** @var bool */
-    private $debug;
-    /** @var int */
-    private $timeOut;
-    /** @var int */
-    private $connectTimeOut;
+    private bool $debug = false;
+    /** @var int|null */
+    private ?int $timeOut = null;
+    /** @var int|null */
+    private ?int $connectTimeOut = null;
 
     /**
      * CurlQuery constructor.
@@ -61,10 +61,6 @@ class CurlQuery
         }
 
         $this->req = $req;
-        $this->contentTypeJSON = false;
-        $this->expectJSON = false;
-        $this->expectJSON_ignoreResContentType = false;
-        $this->debug = true;
     }
 
     /**
@@ -169,7 +165,6 @@ class CurlQuery
 
     /**
      * @return CurlResponse
-     * @throws HttpRequestException
      * @throws HttpResponseException
      */
     public function send(): CurlResponse
@@ -197,10 +192,18 @@ class CurlQuery
                 break;
             default:
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->req->method());
-                if ($this->req->payload()->count()) {
-                    if ($this->contentTypeJSON || $this->req->contentType() === "application/json") {
-                        $payload = json_encode($this->req->payload()->array());
+                $payloadIsJSON = $this->contentTypeJSON || $this->req->contentType() === "application/json";
+                $payload = $this->req->body()->raw();
+                if (!$payload) {
+                    if ($this->req->payload()->count()) {
+                        $payload = $payloadIsJSON ?
+                            json_encode($this->req->payload()->array()) : http_build_query($this->req->payload()->array());
+                    }
+                }
 
+                if ($payload) {
+                    // Content-type JSON
+                    if ($payloadIsJSON) {
                         // Content-type header
                         if (!$this->req->headers()->has("content-type")) {
                             $this->req->headers()->set("Content-type", "application/json; charset=utf-8");
@@ -210,12 +213,11 @@ class CurlQuery
                         if (!$this->req->headers()->has("content-length")) {
                             $this->req->headers()->set("Content-length", strval(strlen($payload)));
                         }
-                    } else {
-                        $payload = http_build_query($this->req->payload()->array());
                     }
 
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
                 }
+
                 break;
         }
 
@@ -253,8 +255,7 @@ class CurlQuery
 
         // Finalise request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function (/** @noinspection PhpUnusedParameterInspection */
-            $ch, $line) use ($responseHeaders) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $line) use ($responseHeaders) {
             if (preg_match('/^[\w\-]+:/', $line)) {
                 $header = preg_split('/:/', $line, 2);
                 $name = trim(strval($header[0] ?? null));
@@ -270,7 +271,7 @@ class CurlQuery
         // Execute cURL request
         $body = curl_exec($ch);
         if ($body === false) {
-            throw new HttpRequestException(
+            throw new HttpResponseException(
                 sprintf('cURL error [%d]: %s', curl_error($ch), curl_error($ch))
             );
         }
@@ -288,20 +289,14 @@ class CurlQuery
 
         // Prepare Response
         $response = new CurlResponse($responseCode);
-        foreach ($responseHeaders as $name => $val) {
-            $response->headers()->set($name, $val);
-        }
+        $response->override($responseHeaders);
+        $response->body()->append($body)->readOnly();
 
         // Close cURL resource
         curl_close($ch);
 
-        // Update Response object
-        $responseBody = new ResponseBody($body);
-        $responseBody->readOnly(true);
-        $response->override($responseBody, $responseHeaders); // Set Response raw body and headers
-
         // Response Body
-        $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) ? true : $this->expectJSON;
+        $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) || $this->expectJSON;
         if ($responseIsJSON) {
             if (!$this->expectJSON_ignoreResContentType) {
                 if (!is_string($responseType)) {
@@ -322,7 +317,7 @@ class CurlQuery
                 if ($this->debug) {
                     $jsonLastErrorMsg = json_last_error_msg();
                     if ($jsonLastErrorMsg) {
-                        trigger_error($jsonLastErrorMsg, E_USER_WARNING);
+                        throw new HttpResponseException('JSON decode error; ' . $jsonLastErrorMsg);
                     }
                 }
 

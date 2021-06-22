@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -22,15 +22,17 @@ use Comely\Http\Exception\HttpRequestException;
  */
 class Authentication
 {
+    /** @var int */
     public const BASIC = 0x64;
+    /** @var int */
     public const DIGEST = 0xc8;
 
     /** @var null|int */
-    private $type;
+    private ?int $type = null;
     /** @var null|string */
-    private $username;
+    private ?string $username;
     /** @var null|string */
-    private $password;
+    private ?string $password;
 
     /**
      * Basic HTTP authorization
@@ -86,15 +88,10 @@ class Authentication
     }
 
     /**
-     * @param $ch
-     * @throws HttpRequestException
+     * @param \CurlHandle $ch
      */
-    private function register($ch)
+    private function register(\CurlHandle $ch)
     {
-        if (!is_resource($ch)) {
-            throw new HttpRequestException('Cannot register Authentication opts to a non-resource');
-        }
-
         switch ($this->type) {
             case self::BASIC:
                 curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);

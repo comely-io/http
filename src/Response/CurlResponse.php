@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace Comely\Http\Response;
 
-use Comely\Http\Query\ResponseBody;
+use Comely\Buffer\Buffer;
 
 /**
  * Class CurlResponse
@@ -35,15 +35,15 @@ class CurlResponse extends AbstractResponse
     /**
      * @return int
      */
-    public function code(): int
+    public function httpStatusCode(): int
     {
         return $this->code;
     }
 
     /**
-     * @return ResponseBody|null
+     * @return Buffer
      */
-    public function body(): ?ResponseBody
+    public function body(): Buffer
     {
         return $this->body;
     }

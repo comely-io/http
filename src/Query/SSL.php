@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -23,17 +23,17 @@ use Comely\Http\Exception\SSL_Exception;
 class SSL
 {
     /** @var bool */
-    private $verify;
+    private bool $verify = true;
     /** @var null|string */
-    private $certPath;
+    private ?string $certPath = null;
     /** @var null|string */
-    private $certPassword;
+    private ?string $certPassword = null;
     /** @var null|string */
-    private $privateKeyPath;
+    private ?string $privateKeyPath = null;
     /** @var null|string */
-    private $privateKeyPassword;
+    private ?string $privateKeyPassword = null;
     /** @var null|string */
-    private $certAuthorityPath;
+    private ?string $certAuthorityPath = null;
 
     /**
      * SSL constructor.
@@ -41,8 +41,6 @@ class SSL
      */
     public function __construct()
     {
-        $this->verify = true;
-
         // Make sure cUrl can work with SSL
         if (!(curl_version()["features"] & CURL_VERSION_SSL)) {
             throw new SSL_Exception('SSL support is unavailable in your cURL build');
@@ -138,16 +136,10 @@ class SSL
     }
 
     /**
-     * @param $ch
-     * @throws SSL_Exception
+     * @param \CurlHandle $ch
      */
-    private function register($ch): void
+    private function register(\CurlHandle $ch): void
     {
-        // Verify param is a resource
-        if (!is_resource($ch)) {
-            throw new SSL_Exception('Cannot register SSL opts to a non-resource');
-        }
-
         // Bypass SSL check?
         if (!$this->verify) {
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
