@@ -23,9 +23,9 @@ class DataProp
     /**
      * DataProp constructor.
      * @param string $key
-     * @param string|int|float|array|null $value
+     * @param string|int|float|array|bool|null $value
      */
-    public function __construct(public string $key, public string|int|float|array|null $value = null)
+    public function __construct(public string $key, public string|int|float|array|null|bool $value = null)
     {
     }
 }

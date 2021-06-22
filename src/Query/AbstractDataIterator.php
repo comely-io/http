@@ -84,9 +84,9 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     }
 
     /**
-     * @return string|int|float|array|null
+     * @return string|int|float|array|null|bool
      */
-    final public function current(): string|int|float|array|null
+    final public function current(): string|int|float|array|null|bool
     {
         /** @var DataProp $prop */
         $prop = current($this->data);
