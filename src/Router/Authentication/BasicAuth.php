@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * This file is a part of "comely-io/http" package.
  * https://github.com/comely-io/http
  *
@@ -69,10 +69,9 @@ class BasicAuth extends AbstractAuth
                 if ($user->password !== $password) {
                     throw new RouteAuthException('Incorrect password');
                 }
-            } catch (RouteAuthException $e) {
+            } catch (RouteAuthException) {
                 throw new RouteAuthException('Incorrect username or password');
             }
-
         } catch (RouteAuthException $e) {
             header(sprintf('WWW-Authenticate: Basic realm="%s"', $this->realm));
             header('HTTP/1.0 401 Unauthorized');
