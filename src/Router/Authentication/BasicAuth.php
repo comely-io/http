@@ -95,6 +95,6 @@ class BasicAuth extends AbstractAuth
             return "";
         }
 
-        return filter_var($in, FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
+        return filter_var($in, FILTER_UNSAFE_RAW, FILTER_FLAG_STRIP_LOW | FILTER_FLAG_STRIP_HIGH);
     }
 }
