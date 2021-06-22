@@ -6,7 +6,7 @@
 
 ## Requirements
 
-* PHP >= 7.1
+* PHP ^8.0
 * ext-json
 * ext-curl
 
