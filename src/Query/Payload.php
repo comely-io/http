@@ -139,7 +139,7 @@ class Payload extends AbstractDataIterator
     public function getInt(string $prop, bool $unSigned = false): ?int
     {
         $value = $this->getUnsafe($prop);
-        if (is_string($value) && preg_match('/^-?[1-9][0-9]+$/', $value)) {
+        if (is_string($value) && preg_match('/^-?[1-9][0-9]*$/', $value)) {
             $value = intval($value);
         }
 
