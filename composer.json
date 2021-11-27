@@ -13,7 +13,7 @@
     }
   ],
   "require": {
-    "php": "^8.0",
+    "php": "^8.1",
     "ext-json": "*",
     "ext-curl": "*",
     "comely-io/buffer-php": "^0.1.1",
