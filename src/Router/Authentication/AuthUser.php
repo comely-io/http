@@ -17,33 +17,15 @@ namespace Comely\Http\Router\Authentication;
 /**
  * Class AuthUser
  * @package Comely\Http\Router\Authentication
- * @property-read string $username
- * @property-read string $password
  */
 class AuthUser
 {
-    /** @var string */
-    private string $username;
-    /** @var string */
-    private string $password;
-
     /**
      * AuthUser constructor.
      * @param string $username
      * @param string $password
      */
-    public function __construct(string $username, string $password)
+    public function __construct(public readonly string $username, public readonly string $password)
     {
-        $this->username = $username;
-        $this->password = $password;
-    }
-
-    /**
-     * @param $prop
-     * @return string|null
-     */
-    public function __get($prop): ?string
-    {
-        return $this->$prop ?? null;
     }
 }

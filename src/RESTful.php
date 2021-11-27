@@ -119,10 +119,7 @@ class RESTful
         $controller = $router->request($req, $bypassAuth);
 
         // Callback Close
-        if ($closure) {
-            call_user_func($closure, $controller);
-        }
-
+        call_user_func($closure, $controller);
         return $controller;
     }
 }

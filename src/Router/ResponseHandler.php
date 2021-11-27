@@ -92,10 +92,12 @@ class ResponseHandler
         if (!$contentType) {
             // Not specified, Try Request's ACCEPT header
             $accept = $req->headers()->get("accept");
-            $acceptTypes = trim(explode(";", $accept)[0]);
-            $contentType = $this->findHandler(explode(",", $acceptTypes));
-            if ($contentType) {
-                $res->headers()->set("Content-Type", $contentType);
+            if (is_string($accept) && $accept) {
+                $acceptTypes = trim(explode(";", $accept)[0]);
+                $contentType = $this->findHandler(explode(",", $acceptTypes));
+                if ($contentType) {
+                    $res->headers()->set("Content-Type", $contentType);
+                }
             }
         }
 
