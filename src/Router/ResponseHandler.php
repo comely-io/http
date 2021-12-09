@@ -15,7 +15,9 @@ declare(strict_types=1);
 namespace Comely\Http\Router;
 
 use Comely\Http\Exception\RouterException;
-use Comely\Http\Response\ControllerResponse;
+use Comely\Utils\OOP\Traits\NoDumpTrait;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class ResponseHandler
@@ -28,23 +30,27 @@ class ResponseHandler
     /** @var \Closure */
     private \Closure $default;
 
+    use NotCloneableTrait;
+    use NotSerializableTrait;
+    use NoDumpTrait;
+
     /**
      * ResponseHandler constructor.
      * @throws RouterException
      */
     public function __construct()
     {
-        $this->default(function (ControllerResponse $res) {
-            if ($res->body()) {
-                return print $res->body()->raw();
+        $this->default(function (Response $res) {
+            if ($res->body->len()) {
+                return print $res->body->raw();
             }
 
-            return print_r($res->payload()->array());
+            return print_r($res->payload->array());
         });
 
         // Default handlers
-        $this->handle("application/json", function (ControllerResponse $res) {
-            return print json_encode($res->payload()->array());
+        $this->handle("application/json", function (Response $res) {
+            return print json_encode($res->payload->array());
         });
     }
 
@@ -79,31 +85,30 @@ class ResponseHandler
      */
     public function send(AbstractController $controller): void
     {
-        $req = $controller->request();
-        $res = $controller->response();
+        $res = $controller->response;
 
         // Set HTTP response Code
-        if ($res->getHttpCode()) {
-            http_response_code($res->getHttpCode());
+        if ($res->getHttpStatusCode()) {
+            http_response_code($res->getHttpStatusCode());
         }
 
         // Is Explicit Content-Type specified?
-        $contentType = $res->headers()->get("content-type");
+        $contentType = $res->headers->get("content-type");
         if (!$contentType) {
             // Not specified, Try Request's ACCEPT header
-            $accept = $req->headers()->get("accept");
+            $accept = $controller->request->headers->get("accept");
             if (is_string($accept) && $accept) {
                 $acceptTypes = trim(explode(";", $accept)[0]);
                 $contentType = $this->findHandler(explode(",", $acceptTypes));
                 if ($contentType) {
-                    $res->headers()->set("Content-Type", $contentType);
+                    $res->headers->set("Content-Type", $contentType);
                 }
             }
         }
 
         // Headers
-        if ($res->headers()->count()) {
-            foreach ($res->headers() as $key => $val) {
+        if ($res->headers->count()) {
+            foreach ($res->headers as $key => $val) {
                 header(sprintf('%s: %s', $key, $val));
             }
         }

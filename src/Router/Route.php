@@ -15,9 +15,10 @@ declare(strict_types=1);
 namespace Comely\Http\Router;
 
 use Comely\Http\Exception\RouteException;
-use Comely\Http\Request;
 use Comely\Http\Router;
 use Comely\Utils\OOP\OOP;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class Route
@@ -26,17 +27,15 @@ use Comely\Utils\OOP\OOP;
 class Route
 {
     /** @var int */
-    private int $id;
-    /** @var Router */
-    private Router $router;
+    public readonly int $id;
     /** @var string */
-    private string $url;
+    public readonly string $path;
     /** @var string */
-    private string $matchPattern;
+    public readonly string $matchPattern;
     /** @var string */
-    private string $controller;
+    public readonly string $controller;
     /** @var bool */
-    private bool $isNamespace;
+    private readonly bool $isNamespace;
     /** @var array */
     private array $ignorePathIndexes = [];
     /** @var null|string */
@@ -44,22 +43,23 @@ class Route
     /** @var null|Router\Authentication\AbstractAuth */
     private ?Router\Authentication\AbstractAuth $auth = null;
 
+    use NotCloneableTrait;
+    use NotSerializableTrait;
+
     /**
-     * Route constructor.
      * @param Router $router
-     * @param string $url
+     * @param string $path
      * @param string $namespaceOrClass
      * @throws RouteException
      */
-    public function __construct(Router $router, string $url, string $namespaceOrClass)
+    public function __construct(private readonly Router $router, string $path, string $namespaceOrClass)
     {
-        $this->router = $router;
-        $this->id = $this->router->count() + 1;
+        $this->id = $this->router->routesCount() + 1;
 
-        // URL
-        $url = "/" . trim(strtolower($url), "/"); // Case-insensitivity
-        if (!preg_match('/^((\/?[\w\-.]+)|(\/\*))*(\/\*)?$/', $url)) {
-            throw new RouteException('Route URL argument contain an illegal character', $this->id);
+        // URL Path
+        $path = "/" . trim(strtolower($path), "/"); // Case-insensitivity
+        if (!preg_match('/^((\/?[\w\-.]+)|(\/\*))*(\/\*)?$/', $path)) {
+            throw new RouteException('Route URL path argument contain an illegal character', $this->id);
         }
 
         // Controller or Namespace
@@ -67,13 +67,13 @@ class Route
             throw new RouteException('Class or namespace contains an illegal character', $this->id);
         }
 
-        $urlIsWildcard = substr($url, -2) === '/*';
-        $controllerIsWildcard = substr($namespaceOrClass, -2) === '\*';
+        $urlIsWildcard = str_ends_with($path, '/*');
+        $controllerIsWildcard = str_ends_with($namespaceOrClass, '\*');
         if ($controllerIsWildcard && !$urlIsWildcard) {
             throw new RouteException('Route URL must end with "/*"', $this->id);
         }
 
-        $this->url = $url;
+        $this->path = $path;
         $this->matchPattern = $this->pattern();
         $this->controller = $namespaceOrClass;
         $this->isNamespace = $controllerIsWildcard;
@@ -87,7 +87,7 @@ class Route
     {
         return [
             "id" => $this->id,
-            "url" => $this->url,
+            "path" => $this->path,
             "matchPattern" => $this->matchPattern,
             "controller" => $this->controller
         ];
@@ -114,10 +114,10 @@ class Route
     private function pattern(): string
     {
         // Init pattern from URL prop
-        $pattern = "/^" . preg_quote($this->url, "/");
+        $pattern = "/^" . preg_quote($this->path, "/");
 
         // Last wildcard
-        if (substr($pattern, -4) === "\/\*") {
+        if (str_ends_with($pattern, "\/\*")) {
             $pattern = substr($pattern, 0, -4) . '(\/[\w\-\.]+)*';
         }
 
@@ -158,17 +158,17 @@ class Route
      */
     public function request(Request $req, bool $bypassHttpAuth = false): ?string
     {
-        $url = $req->url()->path();
+        $path = $req->url->path;
 
         // RegEx match URL pattern
-        if (!is_string($url) || !preg_match($this->matchPattern, $url)) {
+        if (!is_string($path) || !preg_match($this->matchPattern, $path)) {
             return null;
         }
 
         // Route Authentication
         if ($this->auth && !$bypassHttpAuth) {
             $this->auth->authenticate(
-                $req->headers()->get("authorization") // HTTP header "Authorization"
+                $req->headers->get("authorization") // HTTP header "Authorization"
             );
         }
 
@@ -183,7 +183,7 @@ class Route
                 }
 
                 return null;
-            }, explode("/", trim($url, "/")));
+            }, explode("/", trim($path, "/")));
 
             $namespace = substr($this->controller, 0, -2);
             $controllerClass = sprintf('%s\%s', $namespace, implode('\\', $controllerClass));

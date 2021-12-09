@@ -14,12 +14,11 @@ declare(strict_types=1);
 
 namespace Comely\Http\Router;
 
+use Comely\Http\Common\ReadPayload;
+use Comely\Http\Common\WritePayload;
 use Comely\Http\Exception\ControllerException;
-use Comely\Http\Exception\RouterException;
-use Comely\Http\Query\Payload;
-use Comely\Http\Request;
-use Comely\Http\Response\ControllerResponse;
 use Comely\Http\Router;
+use Comely\Utils\OOP\Traits\NoDumpTrait;
 use Comely\Utils\OOP\Traits\NotCloneableTrait;
 use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
@@ -29,37 +28,32 @@ use Comely\Utils\OOP\Traits\NotSerializableTrait;
  */
 abstract class AbstractController
 {
-    /** @var Router */
-    private Router $router;
-    /** @var Request */
-    private Request $request;
-    /** @var ControllerResponse */
-    private ControllerResponse $response;
-    /** @var string|null */
-    protected ?string $entryPoint = null;
+    public readonly Response $response;
 
+    use NoDumpTrait;
     use NotCloneableTrait;
     use NotSerializableTrait;
 
     /**
-     * AbstractController constructor.
      * @param Router $router
-     * @param Request $req
+     * @param Request $request
      * @param AbstractController|null $prev
      * @param string|null $entryPoint
      * @throws ControllerException
      */
-    public function __construct(Router $router, Request $req, ?AbstractController $prev = null, ?string $entryPoint = null)
+    public function __construct(
+        public              readonly Router $router,
+        public              readonly Request $request,
+        ?AbstractController $prev = null,
+        protected ?string   $entryPoint = null)
     {
-        $this->router = $router;
-        $this->request = $req;
-        $this->response = $prev?->response() ?? new ControllerResponse();
+        $this->response = $prev?->response ?? new Response();
 
         if ($entryPoint) {
             $this->entryPoint = method_exists($this, $entryPoint) ? $entryPoint : null;
             if (!$this->entryPoint) {
                 throw new ControllerException(
-                    sprintf('Entrypoint method "%s" does not exist in controller class "%s"', $entryPoint, get_called_class())
+                    sprintf('Entrypoint method "%s" does not exist in controller class "%s"', $entryPoint, static::class)
                 );
             }
         }
@@ -73,44 +67,21 @@ abstract class AbstractController
      */
     abstract public function callback(): void;
 
+
     /**
-     * @return Request
+     * @return ReadPayload
      */
-    public function request(): Request
+    public function input(): ReadPayload
     {
-        return $this->request;
+        return $this->request->payload;
     }
 
     /**
-     * @return ControllerResponse
+     * @return WritePayload
      */
-    public function response(): ControllerResponse
+    public function output(): WritePayload
     {
-        return $this->response;
-    }
-
-    /**
-     * @return Payload
-     */
-    public function input(): Payload
-    {
-        return $this->request->payload();
-    }
-
-    /**
-     * @return Payload
-     */
-    public function output(): Payload
-    {
-        return $this->response->payload();
-    }
-
-    /**
-     * @return Router
-     */
-    public function router(): Router
-    {
-        return $this->router;
+        return $this->response->payload;
     }
 
     /**
@@ -118,7 +89,7 @@ abstract class AbstractController
      */
     public function send(): void
     {
-        $this->router->response()->send($this);
+        $this->router->response->send($this);
     }
 
     /**
@@ -140,32 +111,11 @@ abstract class AbstractController
                     'Forwarded to controller class does not extend "Comely\Http\Router\AbstractController"'
                 );
             }
-        } catch (\ReflectionException) {
+        } catch (\Exception) {
             throw new ControllerException('Could not get reflection instance for next controller class');
         }
 
         return new $controllerClass($this->router, $this->request, $this, $entryPoint);
-    }
-
-    /**
-     * @param string $path
-     * @param string|null $method
-     * @param bool|null $bypassHttpAuth
-     * @return AbstractController
-     * @throws RouterException
-     * @throws \Comely\Http\Exception\HttpRequestException
-     */
-    public function forward(string $path, ?string $method = null, ?bool $bypassHttpAuth = true): AbstractController
-    {
-        // Create new Request
-        $req = new Request($method ?? $this->request->method(), $path);
-        $req->override(
-            clone $this->request->headers(),
-            clone $this->request->payload(),
-            clone $this->request->body()
-        );
-
-        return $this->router->request($req, $bypassHttpAuth);
     }
 
     /**
@@ -174,7 +124,7 @@ abstract class AbstractController
      */
     public function redirect(string $url, ?int $code = null): void
     {
-        $code = $code ?? $this->response->getHttpCode();
+        $code = $code ?? $this->response->getHttpStatusCode();
         if ($code > 0) {
             http_response_code($code);
         }

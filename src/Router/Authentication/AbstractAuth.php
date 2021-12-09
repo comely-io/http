@@ -20,20 +20,16 @@ namespace Comely\Http\Router\Authentication;
  */
 abstract class AbstractAuth
 {
-    /** @var string */
-    protected string $realm;
     /** @var array */
     protected array $users = [];
     /** @var null|callable */
     protected $unauthorized = null;
 
     /**
-     * Authentication constructor.
      * @param string $realm
      */
-    public function __construct(string $realm)
+    public function __construct(protected readonly string $realm)
     {
-        $this->realm = $realm;
     }
 
     /**

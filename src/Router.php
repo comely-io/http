@@ -16,8 +16,12 @@ namespace Comely\Http;
 
 use Comely\Http\Exception\RouterException;
 use Comely\Http\Router\AbstractController;
+use Comely\Http\Router\Request;
 use Comely\Http\Router\ResponseHandler;
 use Comely\Http\Router\Route;
+use Comely\Utils\OOP\Traits\NoDumpTrait;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class Router
@@ -32,30 +36,26 @@ class Router
     /** @var null|string */
     private ?string $fallbackController = null;
     /** @var ResponseHandler */
-    private ResponseHandler $respHandler;
+    public readonly ResponseHandler $response;
+
+    use NotCloneableTrait;
+    use NotSerializableTrait;
+    use NoDumpTrait;
 
     /**
      * Router constructor.
      */
     public function __construct()
     {
-        $this->respHandler = new ResponseHandler();
+        $this->response = new ResponseHandler();
     }
 
     /**
      * @return int
      */
-    public function count(): int
+    public function routesCount(): int
     {
         return $this->count;
-    }
-
-    /**
-     * @return ResponseHandler
-     */
-    public function response(): ResponseHandler
-    {
-        return $this->respHandler;
     }
 
     /**
@@ -74,14 +74,14 @@ class Router
     }
 
     /**
-     * @param string $uri
+     * @param string $path
      * @param string $controllerClassOrNamespace
      * @return Route
      * @throws Exception\RouteException
      */
-    public function route(string $uri, string $controllerClassOrNamespace): Route
+    public function route(string $path, string $controllerClassOrNamespace): Route
     {
-        $route = new Route($this, $uri, $controllerClassOrNamespace);
+        $route = new Route($this, $path, $controllerClassOrNamespace);
         $this->routes[] = $route;
         $this->count++;
         return $route;
