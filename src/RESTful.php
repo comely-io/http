@@ -14,8 +14,14 @@ declare(strict_types=1);
 
 namespace Comely\Http;
 
+use Comely\Buffer\Buffer;
+use Comely\Http\Common\Headers;
+use Comely\Http\Common\HttpMethod;
+use Comely\Http\Common\ReadPayload;
+use Comely\Http\Common\URL;
 use Comely\Http\Exception\RESTfulException;
 use Comely\Http\Router\AbstractController;
+use Comely\Http\Router\Request;
 
 /**
  * Class RESTful
@@ -33,19 +39,23 @@ class RESTful
      */
     public static function Request(Router $router, \Closure $closure): AbstractController
     {
-        $method = $_SERVER["REQUEST_METHOD"] ?? "";
-        $url = $_SERVER["REQUEST_URI"] ?? "";
-
         // Check if URL not rewritten properly (i.e. called /index.php/some/controller)
+        $url = $_SERVER["REQUEST_URI"] ?? "";
         if (preg_match('/^\/?[\w\-.]+\.php\//', $url)) {
             $url = explode("/", $url);
             unset($url[1]);
             $url = implode("/", $url);
         }
 
-        $req = new Request($method, $url);
+        // Prerequisites
+        $url = new URL($url);
+        $method = HttpMethod::fromString($_SERVER["REQUEST_METHOD"] ?? "");
+        if (!$method) {
+            throw new RESTfulException('Invalid/Unsupported HTTP method read from server.REQUEST_METHOD');
+        }
 
         // Headers
+        $headers = []; // Initiate Headers
         foreach ($_SERVER as $key => $value) {
             $key = explode("_", $key);
             if ($key[0] === "HTTP") {
@@ -54,14 +64,14 @@ class RESTful
                     return ucfirst(strtolower($part));
                 }, $key);
 
-                try {
-                    $req->headers()->set(implode("-", $key), $value);
-                } catch (\Exception) {
-                }
+                $headers[implode("-", $key)] = $value;
             }
         }
 
-        // Payload
+        $headers = new Headers($headers);
+
+        // Payload & Body
+        $body = new Buffer();
         $payload = []; // Initiate payload
         $contentType = strtolower(trim(explode(";", $_SERVER["CONTENT_TYPE"] ?? "")[0]));
 
@@ -74,10 +84,15 @@ class RESTful
         $params = null;
         $stream = file_get_contents("php://input");
         if ($stream) {
-            $req->body()->append($stream); // Append "as-is" (Un-sanitized) body to request
+            $body->append($stream); // Append "as-is" (Un-sanitized) body to request
             switch ($contentType) {
                 case "application/json":
-                    $json = json_decode($stream, true);
+                    try {
+                        $json = json_decode($stream, true, flags: JSON_THROW_ON_ERROR);
+                    } catch (\JsonException) {
+                        throw new RESTfulException('Invalid JSON body received');
+                    }
+
                     if (is_array($json)) {
                         $params = $json;
                     } elseif (is_scalar($json) || is_null($json)) {
@@ -89,7 +104,7 @@ class RESTful
                     parse_str($stream, $params);
                     break;
                 case "multipart/form-data":
-                    if (strtolower($method) === "post") {
+                    if ($method === HttpMethod::POST) {
                         $params = $_POST; // Simply use $_POST var;
                     }
 
@@ -101,22 +116,17 @@ class RESTful
             $payload = array_merge($params, $payload);
         }
 
-        // Set to payload
-        foreach ($payload as $key => $value) {
-            try {
-                $req->payload()->set(strval($key), $value);
-            } catch (\Exception) {
-            }
-        }
+        // Payload
+        $payload = new ReadPayload($payload);
 
         // Bypass HTTP auth.
         $bypassAuth = false;
-        if ($req->method() === "OPTIONS") {
+        if ($method === HttpMethod::OPTIONS) {
             $bypassAuth = true;
         }
 
         // Get Controller
-        $controller = $router->request($req, $bypassAuth);
+        $controller = $router->request(new Request($method, $url, $headers, $payload, $body), $bypassAuth);
 
         // Callback Close
         call_user_func($closure, $controller);
