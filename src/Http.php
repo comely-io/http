@@ -51,4 +51,21 @@ class Http
         409 => "Conflict",
         500 => "Internal Server Error"
     ];
+
+    /**
+     * @return Curl
+     */
+    public static function Curl(): Curl
+    {
+        return Curl::getInstance();
+    }
+
+    /**
+     * @param int $statusCode
+     * @return string|null
+     */
+    public static function StatusMessage(int $statusCode): ?string
+    {
+        return self::STATUS[$statusCode] ?? null;
+    }
 }

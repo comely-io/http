@@ -24,6 +24,9 @@ use Comely\Http\Common\WritePayload;
 use Comely\Http\Exception\CurlRequestException;
 use Comely\Http\Exception\CurlResponseException;
 use Comely\Http\Http;
+use Comely\Utils\OOP\Traits\NoDumpTrait;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class CurlQuery
@@ -62,17 +65,16 @@ class CurlQuery
     /** @var int|null */
     private ?int $connectTimeOut = null;
 
+    use NoDumpTrait;
+    use NotSerializableTrait;
+    use NotCloneableTrait;
+
     /**
      * @param HttpMethod $method
      * @param URL $url
-     * @throws CurlRequestException
      */
     public function __construct(HttpMethod $method, URL $url)
     {
-        if (!$url->scheme || !$url->host) {
-            throw new CurlRequestException('Cannot create cURL request without URL scheme and host');
-        }
-
         $this->method = $method;
         $this->url = $url;
         $this->headers = new WriteHeaders([]);
@@ -202,10 +204,16 @@ class CurlQuery
 
     /**
      * @return CurlResponse
+     * @throws CurlRequestException
      * @throws CurlResponseException
      */
     public function send(): CurlResponse
     {
+        // Check URL
+        if (!$this->url->scheme || !$this->url->host) {
+            throw new CurlRequestException('Cannot create cURL request without URL scheme and host');
+        }
+
         $ch = curl_init(); // Init cURL handler
         curl_setopt($ch, CURLOPT_URL, $this->url->complete); // Set URL
         if ($this->httpVersion) {

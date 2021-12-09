@@ -19,6 +19,9 @@ use Comely\Http\Common\Headers;
 use Comely\Http\Common\HttpMethod;
 use Comely\Http\Common\ReadPayload;
 use Comely\Http\Common\URL;
+use Comely\Utils\OOP\Traits\NoDumpTrait;
+use Comely\Utils\OOP\Traits\NotCloneableTrait;
+use Comely\Utils\OOP\Traits\NotSerializableTrait;
 
 /**
  * Class Request
@@ -28,6 +31,10 @@ class Request
 {
     /** @var string|null */
     public readonly ?string $contentType;
+
+    use NoDumpTrait;
+    use NotSerializableTrait;
+    use NotCloneableTrait;
 
     /**
      * @param HttpMethod $method
