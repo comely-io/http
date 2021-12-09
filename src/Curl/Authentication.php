@@ -14,8 +14,6 @@ declare(strict_types=1);
 
 namespace Comely\Http\Curl;
 
-use Comely\Http\Exception\CurlRequestException;
-
 /**
  * Class Authentication
  * @package Comely\Http\Curl
