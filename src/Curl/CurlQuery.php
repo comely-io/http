@@ -12,22 +12,35 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
+namespace Comely\Http\Curl;
 
-use Comely\Http\Exception\HttpRequestException;
-use Comely\Http\Exception\HttpResponseException;
+use Comely\Buffer\Buffer;
+use Comely\Http\Common\Headers;
+use Comely\Http\Common\HttpMethod;
+use Comely\Http\Common\ReadPayload;
+use Comely\Http\Common\URL;
+use Comely\Http\Common\WriteHeaders;
+use Comely\Http\Common\WritePayload;
+use Comely\Http\Exception\CurlRequestException;
+use Comely\Http\Exception\CurlResponseException;
 use Comely\Http\Http;
-use Comely\Http\Request;
-use Comely\Http\Response\CurlResponse;
 
 /**
  * Class CurlQuery
- * @package Comely\Http\Query
+ * @package Comely\Http\Curl
  */
 class CurlQuery
 {
-    /** @var Request */
-    private Request $req;
+    /** @var HttpMethod */
+    public readonly HttpMethod $method;
+    /** @var URL */
+    public readonly URL $url;
+    /** @var WriteHeaders */
+    public readonly WriteHeaders $headers;
+    /** @var WritePayload */
+    public readonly WritePayload $payload;
+    /** @var Buffer */
+    public readonly Buffer $body;
     /** @var null|int */
     private ?int $httpVersion = null;
     /** @var null|string */
@@ -50,17 +63,21 @@ class CurlQuery
     private ?int $connectTimeOut = null;
 
     /**
-     * CurlQuery constructor.
-     * @param Request $req
-     * @throws HttpRequestException
+     * @param HttpMethod $method
+     * @param URL $url
+     * @throws CurlRequestException
      */
-    public function __construct(Request $req)
+    public function __construct(HttpMethod $method, URL $url)
     {
-        if (!$req->url()->scheme() || !$req->url()->host()) {
-            throw new HttpRequestException('Cannot use local request with cURL lib');
+        if (!$url->scheme || !$url->host) {
+            throw new CurlRequestException('Cannot create cURL request without URL scheme and host');
         }
 
-        $this->req = $req;
+        $this->method = $method;
+        $this->url = $url;
+        $this->headers = new WriteHeaders([]);
+        $this->payload = new WritePayload([]);
+        $this->body = new Buffer();
     }
 
     /**
@@ -131,6 +148,26 @@ class CurlQuery
     }
 
     /**
+     * @return $this
+     */
+    public function ignoreSSL(): self
+    {
+        $this->ssl()->verify(false);
+        return $this;
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @return $this
+     */
+    public function authBasic(string $username, string $password): self
+    {
+        $this->auth()->basic($username, $password);
+        return $this;
+    }
+
+    /**
      * @param bool $ignoreReceivedContentType
      * @return CurlQuery
      */
@@ -165,39 +202,43 @@ class CurlQuery
 
     /**
      * @return CurlResponse
-     * @throws HttpResponseException
+     * @throws CurlResponseException
      */
     public function send(): CurlResponse
     {
         $ch = curl_init(); // Init cURL handler
-        curl_setopt($ch, CURLOPT_URL, $this->req->url()->full()); // Set URL
+        curl_setopt($ch, CURLOPT_URL, $this->url->complete); // Set URL
         if ($this->httpVersion) {
             curl_setopt($ch, CURLOPT_HTTP_VERSION, $this->httpVersion);
         }
 
         // SSL?
-        if (strtolower($this->req->url()->scheme()) === "https") {
+        if (strtolower($this->url->scheme) === "https") {
             call_user_func([$this->ssl(), "register"], $ch); // Register SSL options
         }
 
+        // Content-type
+        $contentType = $this->headers->has("content-type") ?
+            trim(explode(";", $this->headers->get("content-type"))[0]) : null;
+
         // Payload
-        switch ($this->req->method()) {
+        switch ($this->method->toString()) {
             case "GET":
                 curl_setopt($ch, CURLOPT_HTTPGET, 1);
-                if ($this->req->payload()->count()) {
-                    $sep = $this->req->url()->query() ? "&" : "?"; // Override URL
-                    curl_setopt($ch, CURLOPT_URL, $this->req->url()->full() . $sep . http_build_query($this->req->payload()->array()));
+                if ($this->payload->count()) {
+                    $sep = $this->url->query ? "&" : "?"; // Override URL
+                    curl_setopt($ch, CURLOPT_URL, $this->url->complete . $sep . http_build_query($this->payload->array()));
                 }
 
                 break;
             default:
-                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->req->method());
-                $payloadIsJSON = $this->contentTypeJSON || $this->req->contentType() === "application/json";
-                $payload = $this->req->body()->raw();
+                curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $this->method->toString());
+                $payloadIsJSON = $this->contentTypeJSON || $contentType === "application/json";
+                $payload = $this->body->raw();
                 if (!$payload) {
-                    if ($this->req->payload()->count()) {
+                    if ($this->payload->count()) {
                         $payload = $payloadIsJSON ?
-                            json_encode($this->req->payload()->array()) : http_build_query($this->req->payload()->array());
+                            json_encode($this->payload->array()) : http_build_query($this->payload->array());
                     }
                 }
 
@@ -205,13 +246,13 @@ class CurlQuery
                     // Content-type JSON
                     if ($payloadIsJSON) {
                         // Content-type header
-                        if (!$this->req->headers()->has("content-type")) {
-                            $this->req->headers()->set("Content-type", "application/json; charset=utf-8");
+                        if (!$this->headers->has("content-type")) {
+                            $this->headers->set("Content-type", "application/json; charset=utf-8");
                         }
 
                         // Content-length header
-                        if (!$this->req->headers()->has("content-length")) {
-                            $this->req->headers()->set("Content-length", strval(strlen($payload)));
+                        if (!$this->headers->has("content-length")) {
+                            $this->headers->set("Content-length", strval(strlen($payload)));
                         }
                     }
 
@@ -222,9 +263,9 @@ class CurlQuery
         }
 
         // Headers
-        if ($this->req->headers()->count()) {
+        if ($this->headers->count()) {
             $httpHeaders = [];
-            foreach ($this->req->headers()->array() as $hn => $hv) {
+            foreach ($this->headers->array() as $hn => $hv) {
                 $httpHeaders[] = $hn . ": " . $hv;
             }
 
@@ -250,8 +291,8 @@ class CurlQuery
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->connectTimeOut);
         }
 
-        // Response Headers
-        $responseHeaders = new Headers();
+        // Response
+        $responseHeaders = [];
 
         // Finalise request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
@@ -261,7 +302,8 @@ class CurlQuery
                 $name = trim(strval($header[0] ?? null));
                 $value = trim(strval($header[1] ?? null));
                 if ($name && $value) {
-                    $responseHeaders->set($name, $value);
+                    /** @noinspection PhpArrayUsedOnlyForWriteInspection */
+                    $responseHeaders[$name] = $value;
                 }
             }
 
@@ -271,7 +313,7 @@ class CurlQuery
         // Execute cURL request
         $body = curl_exec($ch);
         if ($body === false) {
-            throw new HttpResponseException(
+            throw new CurlResponseException(
                 sprintf('cURL error [%d]: %s', curl_error($ch), curl_error($ch))
             );
         }
@@ -284,27 +326,23 @@ class CurlQuery
         }
 
         if (!is_int($responseCode)) {
-            throw new HttpResponseException('Could not retrieve HTTP response code');
+            throw new CurlResponseException('Could not retrieve HTTP response code');
         }
-
-        // Prepare Response
-        $response = new CurlResponse($responseCode);
-        $response->override($responseHeaders);
-        $response->body()->append($body)->readOnly();
 
         // Close cURL resource
         curl_close($ch);
 
-        // Response Body
-        $responseIsJSON = is_string($responseType) && preg_match('/json/', $responseType) || $this->expectJSON;
+        // Response Payload
+        $payload = [];
+        $responseIsJSON = is_string($responseType) && str_contains($responseType, 'json') || $this->expectJSON;
         if ($responseIsJSON) {
             if (!$this->expectJSON_ignoreResContentType) {
                 if (!is_string($responseType)) {
-                    throw new HttpResponseException('Invalid "Content-type" header received, expecting JSON', $responseCode);
+                    throw new CurlResponseException('Invalid "Content-type" header received, expecting JSON', $responseCode);
                 }
 
                 if (strtolower(trim(explode(";", $responseType)[0])) !== "application/json") {
-                    throw new HttpResponseException(
+                    throw new CurlResponseException(
                         sprintf('Expected "application/json", got "%s"', $responseType),
                         $responseCode
                     );
@@ -312,23 +350,23 @@ class CurlQuery
             }
 
             // Decode JSON body
-            $json = json_decode($body, true);
-            if (!$json) {
+            try {
+                $payload = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
                 if ($this->debug) {
-                    $jsonLastErrorMsg = json_last_error_msg();
-                    if ($jsonLastErrorMsg) {
-                        throw new HttpResponseException('JSON decode error; ' . $jsonLastErrorMsg);
-                    }
+                    throw new CurlResponseException('JSON decode error; ' . $e->getMessage());
                 }
 
-                throw new HttpResponseException('An error occurred while decoding JSON body');
-            }
-
-            if (is_array($json)) {
-                $response->payload()->use($json);
+                throw new CurlResponseException('An error occurred while decoding JSON response body');
             }
         }
 
-        return $response;
+        // Final CurlResponse instance
+        return new CurlResponse(
+            new Headers($responseHeaders),
+            new ReadPayload($payload),
+            (new Buffer($body))->readOnly(),
+            $responseCode
+        );
     }
 }

@@ -12,13 +12,13 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
+namespace Comely\Http\Curl;
 
-use Comely\Http\Exception\SSL_Exception;
+use Comely\Http\Exception\CurlSSLException;
 
 /**
  * Class SSL
- * @package Comely\Http\Query
+ * @package Comely\Http\Curl
  */
 class SSL
 {
@@ -36,14 +36,13 @@ class SSL
     private ?string $certAuthorityPath = null;
 
     /**
-     * SSL constructor.
-     * @throws SSL_Exception
+     * @throws CurlSSLException
      */
     public function __construct()
     {
         // Make sure cUrl can work with SSL
         if (!(curl_version()["features"] & CURL_VERSION_SSL)) {
-            throw new SSL_Exception('SSL support is unavailable in your cURL build');
+            throw new CurlSSLException('SSL support is unavailable in your cURL build');
         }
     }
 
@@ -61,13 +60,13 @@ class SSL
      * @param string $file
      * @param null|string $password
      * @return SSL
-     * @throws SSL_Exception
+     * @throws CurlSSLException
      */
     public function certificate(string $file, ?string $password = null): self
     {
         $path = realpath($file);
         if (!$path || !is_readable($path) || !is_file($path)) {
-            throw new SSL_Exception(sprintf('SSL certificate "%s" not found or not readable', basename($file)));
+            throw new CurlSSLException(sprintf('SSL certificate "%s" not found or not readable', basename($file)));
         }
 
         $this->certPath = $path;
@@ -79,13 +78,13 @@ class SSL
      * @param string $file
      * @param null|string $password
      * @return SSL
-     * @throws SSL_Exception
+     * @throws CurlSSLException
      */
     public function privateKey(string $file, ?string $password = null): self
     {
         $path = realpath($file);
         if (!$path || !is_readable($path) || !is_file($path)) {
-            throw new SSL_Exception(sprintf('SSL private key "%s" not found or not readable', basename($file)));
+            throw new CurlSSLException(sprintf('SSL private key "%s" not found or not readable', basename($file)));
         }
 
         $this->privateKeyPath = $file;
@@ -96,13 +95,13 @@ class SSL
     /**
      * @param string $path
      * @return SSL
-     * @throws SSL_Exception
+     * @throws CurlSSLException
      */
     public function ca(string $path): self
     {
         $path = realpath($path);
         if (!$path || !is_readable($path) || !is_file($path)) {
-            throw new SSL_Exception('Path to CA certificate(s) is invalid or not readable');
+            throw new CurlSSLException('Path to CA certificate(s) is invalid or not readable');
         }
 
         $this->certAuthorityPath = $path;
@@ -112,7 +111,7 @@ class SSL
     /**
      * @param string $path
      * @return SSL
-     * @throws SSL_Exception
+     * @throws CurlSSLException
      */
     public function certificateAuthority(string $path): self
     {
@@ -122,17 +121,16 @@ class SSL
     /**
      * @param $method
      * @param $args
-     * @throws SSL_Exception
+     * @return void
      */
     public function __call($method, $args)
     {
-        switch ($method) {
-            case "register":
-                $this->register($args[0] ?? null);
-                return;
+        if ($method == "register") {
+            $this->register($args[0] ?? null);
+            return;
         }
 
-        throw new SSL_Exception(sprintf('Cannot call inaccessible method "%s"', $method));
+        throw new \DomainException(sprintf('Cannot call inaccessible method "%s"', $method));
     }
 
     /**

@@ -12,13 +12,13 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
+namespace Comely\Http\Curl;
 
-use Comely\Http\Exception\HttpRequestException;
+use Comely\Http\Exception\CurlRequestException;
 
 /**
  * Class Authentication
- * @package Comely\Http\Query
+ * @package Comely\Http\Curl
  */
 class Authentication
 {
@@ -74,17 +74,16 @@ class Authentication
     /**
      * @param $method
      * @param $args
-     * @throws HttpRequestException
+     * @return void
      */
     public function __call($method, $args)
     {
-        switch ($method) {
-            case "register":
-                $this->register($args[0] ?? null);
-                return;
+        if ($method == "register") {
+            $this->register($args[0] ?? null);
+            return;
         }
 
-        throw new HttpRequestException(sprintf('Cannot call inaccessible method "%s"', $method));
+        throw new \DomainException(sprintf('Cannot call inaccessible method "%s"', $method));
     }
 
     /**
@@ -92,11 +91,9 @@ class Authentication
      */
     private function register(\CurlHandle $ch)
     {
-        switch ($this->type) {
-            case self::BASIC:
-                curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-                curl_setopt($ch, CURLOPT_USERPWD, sprintf('%s:%s', $this->username, $this->password));
-                break;
+        if ($this->type == self::BASIC) {
+            curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            curl_setopt($ch, CURLOPT_USERPWD, sprintf('%s:%s', $this->username, $this->password));
         }
     }
 }
