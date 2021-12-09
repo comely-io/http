@@ -15,9 +15,9 @@ declare(strict_types=1);
 namespace Comely\Http\Exception;
 
 /**
- * Class HttpResponseException
+ * Class HttpRequestException
  * @package Comely\Http\Exception
  */
-class HttpResponseException extends HttpRequestException
+class CurlRequestException extends HttpException
 {
 }

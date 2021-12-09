@@ -20,23 +20,4 @@ namespace Comely\Http\Exception;
  */
 class RESTfulException extends RouterException
 {
-    /**
-     * @param string $method
-     * @param string $contentType
-     * @return RESTfulException
-     */
-    public static function payloadMethodTypeError(string $method, string $contentType): self
-    {
-        return new self(sprintf('HTTP method "%s" cannot accept input content type "%s"', $method, $contentType));
-    }
-
-    /**
-     * @param string $method
-     * @param string $contentType
-     * @return RESTfulException
-     */
-    public static function payloadStreamError(string $method, string $contentType): self
-    {
-        return new self(sprintf('Failed to parse input stream "%s" sent using "%s" method', $contentType, $method));
-    }
 }

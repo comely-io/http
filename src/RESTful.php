@@ -33,7 +33,6 @@ class RESTful
      * @param Router $router
      * @param \Closure $closure
      * @return AbstractController
-     * @throws Exception\HttpRequestException
      * @throws Exception\RouterException
      * @throws RESTfulException
      */
