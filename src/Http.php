@@ -14,8 +14,6 @@ declare(strict_types=1);
 
 namespace Comely\Http;
 
-use Comely\Http\Router\Request;
-
 /**
  * Class Http
  * @package Comely\Http
