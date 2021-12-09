@@ -14,6 +14,8 @@ declare(strict_types=1);
 
 namespace Comely\Http;
 
+use Comely\Http\Router\Request;
+
 /**
  * Class Http
  * @package Comely\Http
@@ -21,12 +23,9 @@ namespace Comely\Http;
 class Http
 {
     /** string Version (Major.Minor.Release-Suffix) */
-    public const VERSION = "2.0.0";
+    public const VERSION = "2.1.0";
     /** int Version (Major * 10000 + Minor * 100 + Release) */
-    public const VERSION_ID = 20000;
-
-    // HTTP methods
-    public const METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"];
+    public const VERSION_ID = 20100;
 
     // HTTP version
     public const HTTP_VERSION_1 = CURL_HTTP_VERSION_1_0;
@@ -40,7 +39,7 @@ class Http
     ];
 
     // Status Codes Messages
-    public const MESSAGES = [
+    public const STATUS = [
         100 => "Continue",
         200 => "OK",
         201 => "Created",
@@ -54,44 +53,4 @@ class Http
         409 => "Conflict",
         500 => "Internal Server Error"
     ];
-
-    /**
-     * @param string $url
-     * @return Request
-     * @throws Exception\HttpRequestException
-     */
-    public static function Get(string $url): Request
-    {
-        return new Request("GET", $url);
-    }
-
-    /**
-     * @param string $url
-     * @return Request
-     * @throws Exception\HttpRequestException
-     */
-    public static function Post(string $url): Request
-    {
-        return new Request("POST", $url);
-    }
-
-    /**
-     * @param string $url
-     * @return Request
-     * @throws Exception\HttpRequestException
-     */
-    public static function Put(string $url): Request
-    {
-        return new Request("PUT", $url);
-    }
-
-    /**
-     * @param string $url
-     * @return Request
-     * @throws Exception\HttpRequestException
-     */
-    public static function Delete(string $url): Request
-    {
-        return new Request("DELETE", $url);
-    }
 }
