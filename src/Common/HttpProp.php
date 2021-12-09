@@ -12,20 +12,20 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
+namespace Comely\Http\Common;
 
 /**
- * Class DataProp
- * @package Comely\Http\Query
+ * Class HttpProp
+ * This class is used to preserve case-sensitivity of the payload/headers keys
+ * @package Comely\Http\Common
  */
-class DataProp
+class HttpProp
 {
     /**
-     * DataProp constructor.
      * @param string $key
-     * @param string|int|float|array|bool|null $value
+     * @param string|int|float|bool|array|null $value
      */
-    public function __construct(public string $key, public string|int|float|array|null|bool $value = null)
+    public function __construct(public readonly string $key, public readonly string|int|float|bool|null|array $value)
     {
     }
 }

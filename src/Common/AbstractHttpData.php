@@ -12,13 +12,13 @@
 
 declare(strict_types=1);
 
-namespace Comely\Http\Query;
+namespace Comely\Http\Common;
 
 /**
- * Class AbstractDataIterator
- * @package Comely\Http\Query
+ * Class AbstractDataObject
+ * @package Comely\Http\Common
  */
-abstract class AbstractDataIterator implements \Iterator, \Countable
+abstract class AbstractHttpData implements \Iterator, \Countable
 {
     /** @var array */
     protected array $data = [];
@@ -26,10 +26,10 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     protected int $count = 0;
 
     /**
-     * @param DataProp $prop
+     * @param HttpProp $prop
      * @return void
      */
-    protected function setProp(DataProp $prop): void
+    protected function setHttpProp(HttpProp $prop): void
     {
         $this->data[strtolower($prop->key)] = $prop;
         $this->count++;
@@ -37,11 +37,27 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
 
     /**
      * @param string $key
-     * @return DataProp|null
+     * @return HttpProp|null
      */
-    protected function getProp(string $key): ?DataProp
+    protected function getHttpProp(string $key): ?HttpProp
     {
         return $this->data[strtolower($key)] ?? null;
+    }
+
+    /**
+     * @param string $key
+     * @return bool
+     */
+    protected function removeHttpProp(string $key): bool
+    {
+        $key = strtolower($key);
+        if (isset($this->data[$key])) {
+            unset($this->data[$key]);
+            $this->count--;
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -58,13 +74,13 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
      */
     final public function array(): array
     {
-        $array = [];
-        /** @var DataProp $prop */
+        $data = [];
+        /** @var HttpProp $prop */
         foreach ($this->data as $prop) {
-            $array[$prop->key] = $prop->value;
+            $data[$prop->key] = $prop->value;
         }
 
-        return $array;
+        return $data;
     }
 
     /**
@@ -84,11 +100,11 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
     }
 
     /**
-     * @return string|int|float|array|null|bool
+     * @return string|int|float|bool|array|null
      */
-    final public function current(): string|int|float|array|null|bool
+    final public function current(): string|int|float|bool|null|array
     {
-        /** @var DataProp $prop */
+        /** @var HttpProp $prop */
         $prop = current($this->data);
         return $prop->value;
     }
@@ -98,7 +114,7 @@ abstract class AbstractDataIterator implements \Iterator, \Countable
      */
     final public function key(): string
     {
-        /** @var DataProp $prop */
+        /** @var HttpProp $prop */
         $prop = $this->data[key($this->data)];
         return $prop->key;
     }
