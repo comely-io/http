@@ -28,6 +28,7 @@ use Comely\Utils\OOP\Traits\NotSerializableTrait;
  */
 abstract class AbstractController
 {
+    /** @var Response */
     public readonly Response $response;
 
     use NoDumpTrait;
