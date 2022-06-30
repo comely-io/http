@@ -45,7 +45,7 @@ class Response
      * @param string|int|float|bool|array|null $value
      * @return $this
      */
-    public function set(string $key, string|int|float|bool|null|array $value): self
+    public function set(string $key, string|int|float|bool|null|array|object $value): self
     {
         $this->payload->set($key, $value);
         return $this;
