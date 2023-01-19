@@ -304,13 +304,12 @@ class CurlQuery
 
         // Finalise request
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $line) use ($responseHeaders) {
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($ch, $line) use (&$responseHeaders) {
             if (preg_match('/^[\w\-]+:/', $line)) {
-                $header = preg_split('/:/', $line, 2);
+                $header = explode(':', $line, 2);
                 $name = trim(strval($header[0] ?? null));
                 $value = trim(strval($header[1] ?? null));
                 if ($name && $value) {
-                    /** @noinspection PhpArrayUsedOnlyForWriteInspection */
                     $responseHeaders[$name] = $value;
                 }
             }
