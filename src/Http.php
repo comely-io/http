@@ -21,9 +21,9 @@ namespace Comely\Http;
 class Http
 {
     /** string Version (Major.Minor.Release-Suffix) */
-    public const VERSION = "2.1.1";
+    public const VERSION = "2.1.2";
     /** int Version (Major * 10000 + Minor * 100 + Release) */
-    public const VERSION_ID = 20101;
+    public const VERSION_ID = 20102;
 
     // HTTP version
     public const HTTP_VERSION_1 = CURL_HTTP_VERSION_1_0;
